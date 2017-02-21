@@ -6,7 +6,7 @@ setup(name='scram2_plot',
       author='Stephen Fletcher',
       author_email='s.fletcher@uq.edu.au',
       license='MIT',
-      packages=['scram2_plot_package'],
+      packages=['scram2_plot'],
       classifiers=[
     # How mature is this project? Common values are
     #   3 - Alpha
@@ -25,7 +25,7 @@ setup(name='scram2_plot',
     # that you indicate whether you support Python 2, Python 3 or both.
     'Programming Language :: Python :: 3.5'],
       install_requires=['numpy','matplotlib','bokeh'],
-      scripts=['scram2_plot_package/scram2_plot.py',
-      'scram2_plot_package/plot_code.py',
+      scripts=['scram2_plot/scram2_plot.py',
+      'scram2_plot/plot_code.py',
       ],
       zip_safe=False)

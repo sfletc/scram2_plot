@@ -289,6 +289,7 @@ def den_plot_se(x_ref, y_fwd_smoothed_upper, y_fwd_smoothed_lower, y_rvs_smoothe
     :param xlab:
     :return:
     """
+    fig = plt.figure(figsize=(10, 5))
     plt.plot(x_ref, y_fwd_smoothed_upper, color=_nt_colour(nt), label='{0} nt'.format(nt), lw=1, alpha=0.2)
     plt.plot(x_ref, y_fwd_smoothed_lower, color=_nt_colour(nt), lw=1, alpha=0.2)
     plt.fill_between(x_ref, y_fwd_smoothed_upper,y_fwd_smoothed_lower, color=_nt_colour(nt), alpha=0.5)
@@ -313,7 +314,7 @@ def den_multi_plot_21_22_24_se(x_ref, y_fwd_smoothed_upper_21, y_fwd_smoothed_lo
                            y_fwd_smoothed_upper_24, y_fwd_smoothed_lower_24,
                            y_rvs_smoothed_upper_24, y_rvs_smoothed_lower_24,
                            header, plot_y_lim, pub):
-    fig = plt.figure(figsize=(10, 6))
+    fig = plt.figure(figsize=(10, 5))
     #21
     plt.plot(x_ref, y_fwd_smoothed_upper_21, color=_nt_colour(21), label='{0} nt'.format(21), lw=1, alpha=0.2)
     plt.plot(x_ref, y_fwd_smoothed_lower_21, color=_nt_colour(21), lw=1, alpha=0.2)

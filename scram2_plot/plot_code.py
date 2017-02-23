@@ -46,10 +46,10 @@ def import_scram2_den(in_file):
             else:
                 line = line.strip().rsplit(',', 5)
                 srna_len = len(line[2])
-                if line[0][:-1] not in alignments:
-                    alignments[line[0][:-1]] = [(int(line[1]), DNA(line[2]), int(line[3]), float(line[4]),float(line[5]))]
+                if line[0] not in alignments:
+                    alignments[line[0]] = [(int(line[1]), DNA(line[2]), int(line[3]), float(line[4]),float(line[5]))]
                 else:
-                    alignments[line[0][:-1]].append((int(line[1]), DNA(line[2]), int(line[3]), float(line[4]),float(line[5])))
+                    alignments[line[0]].append((int(line[1]), DNA(line[2]), int(line[3]), float(line[4]),float(line[5])))
     return alignments, srna_len
 
 
@@ -223,7 +223,6 @@ def single_header_plot(search_terms, in_file, cutoff, plot_y_lim, pub):
     substring = " ".join(search_terms)
     print("Loading Alignment Files\n")
     in_x, nt = import_scram2_den(in_file)
-
     print("Extracting headers\n")
     for header in in_x.keys():
         if substring.lower() in header.lower():

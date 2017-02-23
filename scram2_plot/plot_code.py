@@ -46,7 +46,7 @@ def import_scram2_den(in_file):
             else:
                 line = line.strip().rsplit(',', 5)
                 srna_len = len(line[2])
-                if line[0][1:-1] not in alignments:
+                if line[0][:-1] not in alignments:
                     alignments[line[0][:-1]] = [(int(line[1]), DNA(line[2]), int(line[3]), float(line[4]),float(line[5]))]
                 else:
                     alignments[line[0][:-1]].append((int(line[1]), DNA(line[2]), int(line[3]), float(line[4]),float(line[5])))
@@ -139,7 +139,7 @@ def _smoothed_for_plot_se(graph_processed, smooth_win_size):
     return y_fwd_smoothed_upper, y_fwd_smoothed_lower, y_rvs_smoothed_upper,  y_rvs_smoothed_lower
 
 
-def multi_header_plot(search_terms, in_21, in_22, in_24, cutoff, plot_y_lim, pub):
+def multi_header_plot(search_terms, in_files, cutoff, plot_y_lim, pub):
     """
 
     :param search_terms:
@@ -157,13 +157,33 @@ def multi_header_plot(search_terms, in_21, in_22, in_24, cutoff, plot_y_lim, pub
     :param no_display:
     :return:
     """
+
+    all_files_present = 0
+    for file_name in in_files:
+
+        if file_name.strip().split(".")[-2][-2:] == "21":
+            print("Loading 21 nt Alignment File\n")
+            in_21, _ = import_scram2_den(file_name)
+            all_files_present +=1
+        elif file_name.strip().split(".")[-2][-2:] == "22":
+            print("Loading 22 nt Alignment File\n")
+            in_22, _ = import_scram2_den(file_name)
+            all_files_present +=1
+        elif file_name.strip().split(".")[-2][-2:] == "24":
+            print("Loading 24 nt Alignment File\n")
+            in_24, _ = import_scram2_den(file_name)
+            all_files_present +=1
+    if all_files_present != 3:
+        print("\n21nt, 22nt and 24nt alignment files are required to proceed")
+        exit()
     substring = " ".join(search_terms)
-    print("Loading Alignment Files\n")
-    in_21, _ = import_scram2_den(in_21)
-    in_22, _ = import_scram2_den(in_22)
-    in_24, _ = import_scram2_den(in_24)
+
     print("Extracting headers\n")
-    for header in in_21.keys():
+    all_keys=set()
+    for nt in [in_21, in_22, in_24]:
+        for header in nt.keys():
+            all_keys.add(header)
+    for header in all_keys:
         if substring.lower() in header.lower():
             alignment_21, a = extract_header_alignment(header, in_21)
             alignment_22, b = extract_header_alignment(header, in_22)
@@ -293,7 +313,7 @@ def den_multi_plot_21_22_24_se(x_ref, y_fwd_smoothed_upper_21, y_fwd_smoothed_lo
                            y_fwd_smoothed_upper_24, y_fwd_smoothed_lower_24,
                            y_rvs_smoothed_upper_24, y_rvs_smoothed_lower_24,
                            header, plot_y_lim, pub):
-
+    fig = plt.figure(figsize=(10, 6))
     #21
     plt.plot(x_ref, y_fwd_smoothed_upper_21, color=_nt_colour(21), label='{0} nt'.format(21), lw=1, alpha=0.2)
     plt.plot(x_ref, y_fwd_smoothed_lower_21, color=_nt_colour(21), lw=1, alpha=0.2)
@@ -388,7 +408,7 @@ def _nt_colour(nt):
 
 
 
-def cdp_plot_bokeh(file_name, seq1, seq2, nt, plot_type, browser):
+def cdp_plot_bokeh(file_name, seq1, seq2, plot_type, browser):
     output_notebook()
     if browser:
         output_file("plot.html")
@@ -405,6 +425,10 @@ def cdp_plot_bokeh(file_name, seq1, seq2, nt, plot_type, browser):
     header=[]
     line_header=[]
     max_y=0.0
+    try:
+        nt = int(file_name.strip().split('.')[-2][-2:])
+    except:
+        nt = 20 # this is just for plot colour, so makes black if nt can't be parsed from filename
     with open(file_name) as csvfile:
         line_reader=csv.reader(csvfile)
         for line in line_reader:

@@ -42,6 +42,9 @@ def main(argv=None):
         profile_single.add_argument('-ylim', '--ylim',
                             type=float, help='+/- y axis limit',
                             default=0)
+        profile_single.add_argument('-win','--win', type = int, help = 'Smoothing window size (default=auto)',
+                                    default=0)
+
         profile_single.add_argument('-pub', '--publish', action='store_true',
                             default=False,
                             help='Remove all labels from profiles for editing for publication')
@@ -58,6 +61,8 @@ def main(argv=None):
         profile_multi.add_argument('-ylim', '--ylim',
                             type=float, help='+/- y axis limit',
                             default=0)
+        profile_multi.add_argument('-win','--win', type = int, help = 'Smoothing window size (default=auto)',
+                                    default=0)
         profile_multi.add_argument('-pub', '--publish', action='store_true',
                             default=False,
                             help='Remove all labels from (non-bokeh) profiles for \
@@ -86,7 +91,8 @@ def main(argv=None):
                 cutoff = args.cutoff
                 ylim = args.ylim
                 pub = args.publish
-                pc.multi_header_plot(search_term, a, cutoff, ylim, pub)
+                win = args.win
+                pc.multi_header_plot(search_term, a, cutoff, ylim, win, pub)
 
             elif args.subcommand =="single":
                 search_term = args.search
@@ -94,7 +100,8 @@ def main(argv=None):
                 cutoff = args.cutoff
                 ylim = args.ylim
                 pub = args.publish
-                pc.single_header_plot(search_term, a, cutoff, ylim, pub)
+                win = args.win
+                pc.single_header_plot(search_term, a, cutoff, ylim, win, pub)
 
         if args.command == "scatter":
             alignment_file = args.alignment

@@ -139,7 +139,7 @@ def _smoothed_for_plot_se(graph_processed, smooth_win_size):
     return y_fwd_smoothed_upper, y_fwd_smoothed_lower, y_rvs_smoothed_upper,  y_rvs_smoothed_lower
 
 
-def multi_header_plot(search_terms, in_files, cutoff, plot_y_lim, pub):
+def multi_header_plot(search_terms, in_files, cutoff, plot_y_lim, win, pub):
     """
 
     :param search_terms:
@@ -191,7 +191,8 @@ def multi_header_plot(search_terms, in_files, cutoff, plot_y_lim, pub):
             if alignment_21[2] >= cutoff or alignment_22[2] >= cutoff or alignment_24[2] >= cutoff:
                 print (header)
                 ref_len = max(a, b, c)
-                win = int(ref_len / 30)
+                if win ==0:
+                    win = int(ref_len / 30)
                 if win % 2 != 0 or win == 0: win += 1
                 graph_processed_21 = fill_in_zeros_se(alignment_21, ref_len, 21)
                 graph_processed_22 = fill_in_zeros_se(alignment_22, ref_len, 22)
@@ -208,7 +209,7 @@ def multi_header_plot(search_terms, in_files, cutoff, plot_y_lim, pub):
                                            y_rvs_smoothed_upper_24, y_rvs_smoothed_lower_24,
                                            header, plot_y_lim, pub)
 
-def single_header_plot(search_terms, in_file, cutoff, plot_y_lim, pub):
+def single_header_plot(search_terms, in_file, cutoff, plot_y_lim, win, pub):
     """
 
     :param f:
@@ -229,7 +230,8 @@ def single_header_plot(search_terms, in_file, cutoff, plot_y_lim, pub):
             alignment_x, ref_len = extract_header_alignment(header, in_x)
             if alignment_x[2] >= cutoff:
                 print(header)
-                win = int(ref_len / 30)
+                if win ==0:
+                    win = int(ref_len / 30)
                 if win % 2 != 0 or win == 0: win += 1
                 graph_processed_x = fill_in_zeros_se(alignment_x, ref_len, nt)
                 x_ref = graph_processed_x[0]

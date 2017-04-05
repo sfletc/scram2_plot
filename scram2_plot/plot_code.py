@@ -44,7 +44,7 @@ def import_scram2_den(in_file):
             if first_line:
                 first_line = False
             else:
-                line = line.strip().rsplit(',', 5)
+                line = line.strip().rsplit(',', 4)
                 srna_len = len(line[2])
                 if line[0] not in alignments:
                     alignments[line[0]] = [(int(line[1]), DNA(line[2]), int(line[3]), float(line[4]),float(line[5]))]

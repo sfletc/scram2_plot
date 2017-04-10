@@ -12,6 +12,9 @@ from collections import OrderedDict
 
 
 class DNA(object):
+    """
+    DNA class
+    """
     dna_alphabet = set("AGCTN")
 
     def __init__(self, sequence):
@@ -36,6 +39,8 @@ class DNA(object):
 def import_scram2_den(in_file):
     """
     Import a SCRAM2 csv file to a dictionary
+    :param in_file: path/to/profile string
+    :return: alignments dictionary and snra length in the alignment
     """
     alignments = {}
     srna_len=0
@@ -57,6 +62,9 @@ def import_scram2_den(in_file):
 def extract_header_alignment(header, alignments):
     """
     With a provided complete header, extract the alignment and process to correct format for fill in zeros
+    :param header: reference sequence header string 
+    :param alignments: alignments dictionary
+    :return: sorted_fwd_alignment, sorted_rvs_alignment, aln_count list
     """
     try:
         extracted_alignments = alignments[header]
@@ -125,9 +133,9 @@ def fill_in_zeros_se(fwd_rvs_align_list, ref_len, nt):
 def _smoothed_for_plot_se(graph_processed, smooth_win_size):
     """
     Return fwd and rvs smoothed profiles
-    :param graph_processed:
-    :param smooth_win_size:
-    :return:
+    :param graph_processed: list of fwd and rvs upper and lower se bounds
+    :param smooth_win_size: smoothing window size
+    :return: list of smoothed fwd and rvs upper and lower se bound
     """
     y_fwd_smoothed_upper = smooth(numpy.array(graph_processed[1]),
                             smooth_win_size, window='blackman')
@@ -142,38 +150,24 @@ def _smoothed_for_plot_se(graph_processed, smooth_win_size):
 
 def multi_header_plot(search_terms, in_files, cutoff, plot_y_lim, win, pub):
     """
-
-    :param search_terms:
-    :param cutoff:
-    :param f:
-    :param no_display:
-    :param search_terms:
-    :param in_21:
-    :param in_22:
-    :param in_24:
-    :param cutoff:
-    :param plot_y_lim:
-    :param pub:
-    :param f:
-    :param no_display:
-    :return:
+    21,22,24nt profile plot
+    :param search_terms: header search terms list
+    :param in_files: alignment files prefix
+    :param cutoff: highest count of the most abundant alignment of 21,22,24 nt profiles
+    :param plot_y_lim: set y limits on plot 
+    :param win: smoothign window size
+    :param pub: remove box and axis labels
     """
 
-    all_files_present = 0
-# for file_name in in_files:
+    select_win = False
     try:
-# if file_name.strip().split(".")[-2][-2:] == "21":
+
         print("Loading 21 nt Alignment File\n")
         in_21, _ = import_scram2_den(in_files+"_21.csv")
-        # all_files_present +=1
-        # elif file_name.strip().split(".")[-2][-2:] == "22":
         print("Loading 22 nt Alignment File\n")
         in_22, _ = import_scram2_den(in_files+"_22.csv")
-        # all_files_present +=1
-        # elif file_name.strip().split(".")[-2][-2:] == "24":
         print("Loading 24 nt Alignment File\n")
         in_24, _ = import_scram2_den(in_files+"_24.csv")
-        # all_files_present +=1
     except:
         print("\n21nt, 22nt and 24nt alignment files are required to proceed")
         sys.exit()
@@ -192,8 +186,9 @@ def multi_header_plot(search_terms, in_files, cutoff, plot_y_lim, win, pub):
             if alignment_21[2] >= cutoff or alignment_22[2] >= cutoff or alignment_24[2] >= cutoff:
                 print (header)
                 ref_len = max(a, b, c)
-                if win ==0:
+                if win ==0 or select_win:
                     win = int(ref_len / 30)
+                    select_win=True
                 if win % 2 != 0 or win == 0: win += 1
                 graph_processed_21 = fill_in_zeros_se(alignment_21, ref_len, 21)
                 graph_processed_22 = fill_in_zeros_se(alignment_22, ref_len, 22)
@@ -222,6 +217,7 @@ def single_header_plot(search_terms, in_file, cutoff, plot_y_lim, win, pub):
     :param plot_y_lim:
     :return:
     """
+    select_win = False
     substring = " ".join(search_terms)
     print("Loading Alignment Files\n")
     in_x, nt = import_scram2_den(in_file)
@@ -231,8 +227,9 @@ def single_header_plot(search_terms, in_file, cutoff, plot_y_lim, win, pub):
             alignment_x, ref_len = extract_header_alignment(header, in_x)
             if alignment_x[2] >= cutoff:
                 print(header)
-                if win ==0:
+                if win ==0 or select_win:
                     win = int(ref_len / 30)
+                    select_win=True
                 if win % 2 != 0 or win == 0: win += 1
                 graph_processed_x = fill_in_zeros_se(alignment_x, ref_len, nt)
                 x_ref = graph_processed_x[0]

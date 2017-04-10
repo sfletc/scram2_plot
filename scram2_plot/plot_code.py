@@ -1,6 +1,7 @@
 
 import time
 import csv
+import sys
 import numpy
 from pylab import *  # @UnusedWildImport
 import matplotlib.pyplot as plt  # @Reimport
@@ -159,23 +160,23 @@ def multi_header_plot(search_terms, in_files, cutoff, plot_y_lim, win, pub):
     """
 
     all_files_present = 0
-    for file_name in in_files:
-
-        if file_name.strip().split(".")[-2][-2:] == "21":
-            print("Loading 21 nt Alignment File\n")
-            in_21, _ = import_scram2_den(file_name)
-            all_files_present +=1
-        elif file_name.strip().split(".")[-2][-2:] == "22":
-            print("Loading 22 nt Alignment File\n")
-            in_22, _ = import_scram2_den(file_name)
-            all_files_present +=1
-        elif file_name.strip().split(".")[-2][-2:] == "24":
-            print("Loading 24 nt Alignment File\n")
-            in_24, _ = import_scram2_den(file_name)
-            all_files_present +=1
-    if all_files_present != 3:
+# for file_name in in_files:
+    try:
+# if file_name.strip().split(".")[-2][-2:] == "21":
+        print("Loading 21 nt Alignment File\n")
+        in_21, _ = import_scram2_den(in_files+"_21.csv")
+        # all_files_present +=1
+        # elif file_name.strip().split(".")[-2][-2:] == "22":
+        print("Loading 22 nt Alignment File\n")
+        in_22, _ = import_scram2_den(in_files+"_22.csv")
+        # all_files_present +=1
+        # elif file_name.strip().split(".")[-2][-2:] == "24":
+        print("Loading 24 nt Alignment File\n")
+        in_24, _ = import_scram2_den(in_files+"_24.csv")
+        # all_files_present +=1
+    except:
         print("\n21nt, 22nt and 24nt alignment files are required to proceed")
-        exit()
+        sys.exit()
     substring = " ".join(search_terms)
 
     print("Extracting headers\n")

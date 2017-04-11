@@ -518,11 +518,12 @@ def log_se_plot(header, line_header, log_max, nt, seq1, seq2, x_vals_line, x_val
                                                      y=y_vals_point, Desc=header, )
                                     )
     source_line = ColumnDataSource(data=OrderedDict(x=x_vals_line,
-                                                    y=y_vals_line, Desc=line_header, )
+                                                    y=y_vals_line, )
                                    )
-    p.multi_line('x', 'y', source=source_line, color=_nt_colour(nt), alpha=0.5, )
+    
     p.circle('x', 'y', source=source_point, size=2, color=_nt_colour(nt))
     p.line([0.1, log_max], [0.1, log_max])
+    p.multi_line(xs=x_vals_line, ys=y_vals_line, color=_nt_colour(nt), alpha=0.5, )
     p.xaxis.axis_label = seq1
     p.yaxis.axis_label = seq2
     show(p)

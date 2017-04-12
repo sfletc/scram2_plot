@@ -280,7 +280,7 @@ def _pub_plot():
         axis='both',  # changes apply to the x-axis
         which='both',  # both major and minor ticks are affected
         bottom='on',  # ticks along the bottom edge are off
-        top='off',
+        top='on',
         right='on',
         left='on',  # ticks along the top edge are off
         labelbottom='off',
@@ -429,7 +429,7 @@ def linear_ellipse_plot(_max, ellipse_height, ellipse_width, header, nt, seq1, s
 
 
 def log_se_plot(header, line_header, log_max, nt, seq1, seq2, x_vals_line, x_vals_point, y_vals_line, y_vals_point,
-                xerr, yerr, save_plot=True):
+                xerr, yerr, save_plot=True, pub_plot=True):
     # Std Error bars
     print("Interactive log plot with se bars")
     hover = HoverTool(
@@ -460,13 +460,17 @@ def log_se_plot(header, line_header, log_max, nt, seq1, seq2, x_vals_line, x_val
         plt.scatter(x_vals_point, y_vals_point, color=_nt_colour(nt), s=3)
         plt.xlim([0.1,log_max])
         plt.ylim([0.1,log_max])
-        plt.xlabel(seq1)
-        plt.ylabel(seq2)
+
         plt.errorbar(x_vals_point, y_vals_point, xerr=xerr, yerr=yerr, capsize=0, ls='none', color=_nt_colour(nt),
                      elinewidth=0.5)
 
         plt.xscale('log')
         plt.yscale('log')
+        if pub_plot:
+            _pub_plot()
+        else:
+            plt.xlabel(seq1)
+            plt.ylabel(seq2)
 
         plt.savefig('{0}_{1}_{2}.png'.format(seq1,seq2,nt), dpi=300)
         plt.show()

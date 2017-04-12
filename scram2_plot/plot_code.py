@@ -161,7 +161,7 @@ def multi_header_plot(nt_list, search_terms, in_files, cutoff, plot_y_lim, win, 
             in_file, _ = import_scram2_den(in_files+"_"+nt+".csv")
             alignment_file_list.append(in_file)
     except:
-        print("\nProblem loading alignment files.  Possible a missing file for the sRNA lengths provided\n")
+        print("\nProblem loading alignment files.  Possibly a missing file for the sRNA lengths provided\n")
         sys.exit()
     substring = " ".join(search_terms)
 
@@ -315,83 +315,89 @@ def _nt_colour(nt):
     :param nt: aligned read length (int)
     :return: colour code (str)
     """
-    if nt == 21:
-        col = '#00CC00'
-    elif nt == 22:
-        col = '#FF3399'
-    elif nt == 24:
-        col = '#3333FF'
+    hex_dict={18:'#669999',19:'#33cccc',20:'#33cccc',21:'#00CC00',
+              22:'#FF3399',23:'#339933',24:'#3333FF',25:'#cccc00',
+              26:'#660033',27:'#996600',28:'#336699',29:'#ff6600',
+              30:'#ff99ff',31:'#669900',32:'#993333'}
+
+    if nt not in hex_dict:
+        return "black"
     else:
-        col = 'black'
-    return col
+        return hex_dict[nt]
+
+def cdp_plot_bokeh(file_prefix, nt_list, seq1, seq2, plot_type, browser, save_plot, pub):
+    try:
+        for nt in nt_list:
+            compare_plot_prepare("{0}_{1}.csv".format(file_prefix,nt), int(nt), browser, plot_type, pub, save_plot, seq1, seq2)
+    except:
+        print("\nProblem loading alignment files.  Possibly a missing file for the sRNA lengths provided\n")
+        sys.exit()
 
 
 
-def cdp_plot_bokeh(file_name, seq1, seq2, plot_type, browser, save_plot, pub):
-    output_notebook()
+
+def compare_plot_prepare(file_name, nt, browser, plot_type, pub, save_plot, seq1, seq2):
+    #output_notebook()
     if browser:
         output_file("plot.html")
     else:
-        output_notebook()
-    first_line=True
+        output_notebook(hide_banner=True)
+    first_line = True
     x_vals_line = []
     x_vals_point = []
     # ellipse_width=[]
-    xerr=[]
-    max_x=0.0
+    xerr = []
+    max_x = 0.0
     y_vals_line = []
     y_vals_point = []
     # ellipse_height=[]
-    header=[]
-    yerr=[]
-    max_y=0.0
-    try:
-        nt = int(file_name.strip().split('.')[-2][-2:])
-    except:
-        nt = 20 # this is just for plot colour, so makes black if nt can't be parsed from filename
+    header = []
+    yerr = []
+    max_y = 0.0
+    # try:
+    #     nt = int(file_name.strip().split('.')[-2][-2:])
+    # except:
+    #     nt = 20  # this is just for plot colour, so makes black if nt can't be parsed from filename
     with open(file_name) as csvfile:
-        line_reader=csv.reader(csvfile)
+        line_reader = csv.reader(csvfile)
         for line in line_reader:
             if first_line:
-                first_line=False
+                first_line = False
             else:
-                #calc max value
+                # calc max value
                 if float(line[-4]) > max_x:
                     max_x = float(line[-4])
                 if float(line[-2]) > max_y:
                     max_y = float(line[-2])
-                #line
-                line[0]=line[0].strip()
-                x_se = [float(line[-4])-float(line[-3]), float(line[-4])+float(line[-3])]
-                y_se = [float(line[-2])-float(line[-1]), float(line[-2])+float(line[-1])]
+                # line
+                line[0] = line[0].strip()
+                x_se = [float(line[-4]) - float(line[-3]), float(line[-4]) + float(line[-3])]
+                y_se = [float(line[-2]) - float(line[-1]), float(line[-2]) + float(line[-1])]
                 xerr.append(float(line[-3]))
                 x_vals_line.append(x_se)
-                y_vals_line.append([float(line[-2]),float(line[-2])])
-                x_vals_line.append([float(line[-4]),float(line[-4])])
+                y_vals_line.append([float(line[-2]), float(line[-2])])
+                x_vals_line.append([float(line[-4]), float(line[-4])])
                 y_vals_line.append(y_se)
                 yerr.append(float(line[-1]))
-                #point
+                # point
                 x_vals_point.append(float(line[-4]))
                 y_vals_point.append(float(line[-2]))
 
                 header.append(line[0])
-
-    _max = max([max_x,max_y])  # sets up max x and y scale values
+    _max = max([max_x, max_y])  # sets up max x and y scale values
     log_max = _max + _max / 2
     csvfile.close()
-
-    #Interactive
-    if plot_type=="log" or plot_type=="all":
+    # Interactive
+    if plot_type == "log" or plot_type == "all":
         compare_plot(header, log_max, nt, seq1, seq2, [], x_vals_point, [], y_vals_point, [], [], save_plot, pub)
     if plot_type == "log_error" or plot_type == "all":
         compare_plot(header, log_max, nt, seq1, seq2, x_vals_line, x_vals_point, y_vals_line,
-                    y_vals_point, xerr, yerr, save_plot, pub)
+                     y_vals_point, xerr, yerr, save_plot, pub)
 
 
 def compare_plot(header, log_max, nt, seq1, seq2, x_vals_line, x_vals_point, y_vals_line, y_vals_point,
                 xerr, yerr, save_plot, pub_plot):
     # Std Error bars
-    print("Interactive log plot with se bars")
     hover = HoverTool(
         tooltips=[
             ("(x,y)", "($x, $y)"),

@@ -1,7 +1,4 @@
-
-import time
 import csv
-import sys
 import numpy
 from pylab import *  # @UnusedWildImport
 import matplotlib.pyplot as plt  # @Reimport
@@ -88,12 +85,11 @@ def extract_header_alignment(header, alignments):
     return [sorted_fwd_alignment, sorted_rvs_alignment, aln_count], ref_len
 
 
-def fill_in_zeros_se(fwd_rvs_align_list, ref_len, nt):
+def fill_in_zeros_se(fwd_rvs_align_list, ref_len):
     """
     Generate alignment counts for every nucleotide in the reference
     :param fwd_rvs_align_list:  list of sorted forwards and reverse alignments
     :param ref_len: number of nucleotides in the reference sequence (int)
-    :param nt: length of the aligned reads (int)
     :return: reference_x_axis ([0,0,...] (list(int)) - length of refseq seq,
              fwd_alignment_y_axis [2,4,5.2,6,....] (list(float)) - sense strand alignment count (positive),
              fwd_rvs_align_list [-3,-4,-5.6,...] (list(float)) - antisense strand alignment count (negative)
@@ -197,7 +193,7 @@ def multi_header_plot(nt_list, search_terms, in_files, cutoff, plot_y_lim, win, 
                 graph_processed_list=[]
                 nt_pos=0
                 for alignment in header_alignment_tuple:
-                    graph_processed_list.append(fill_in_zeros_se(alignment,max_ref_len,nt_list[nt_pos]))
+                    graph_processed_list.append(fill_in_zeros_se(alignment, max_ref_len))
                     nt_pos+=1
 
                 x_ref = graph_processed_list[0][0]
@@ -331,7 +327,7 @@ def _nt_colour(nt):
 
 
 
-def cdp_plot_bokeh(file_name, seq1, seq2, plot_type, browser):
+def cdp_plot_bokeh(file_name, seq1, seq2, plot_type, browser, save_plot, pub):
     output_notebook()
     if browser:
         output_file("plot.html")
@@ -340,14 +336,13 @@ def cdp_plot_bokeh(file_name, seq1, seq2, plot_type, browser):
     first_line=True
     x_vals_line = []
     x_vals_point = []
-    ellipse_width=[]
+    # ellipse_width=[]
     xerr=[]
     max_x=0.0
     y_vals_line = []
     y_vals_point = []
-    ellipse_height=[]
+    # ellipse_height=[]
     header=[]
-    line_header=[]
     yerr=[]
     max_y=0.0
     try:
@@ -378,11 +373,8 @@ def cdp_plot_bokeh(file_name, seq1, seq2, plot_type, browser):
                 #point
                 x_vals_point.append(float(line[-4]))
                 y_vals_point.append(float(line[-2]))
-                #height and width
-                ellipse_width.append(2 * float(line[-3]))
-                ellipse_height.append(2 * float(line[-1]))
+
                 header.append(line[0])
-                line_header=line_header+[line[0]]+[line[0]]
 
     _max = max([max_x,max_y])  # sets up max x and y scale values
     log_max = _max + _max / 2
@@ -390,46 +382,14 @@ def cdp_plot_bokeh(file_name, seq1, seq2, plot_type, browser):
 
     #Interactive
     if plot_type=="log" or plot_type=="all":
-        log_dot_plot(header, log_max, nt, seq1, seq2, x_vals_point, y_vals_point)
+        compare_plot(header, log_max, nt, seq1, seq2, [], x_vals_point, [], y_vals_point, [], [], save_plot, pub)
     if plot_type == "log_error" or plot_type == "all":
-        log_se_plot(header, line_header, log_max, nt, seq1, seq2, x_vals_line, x_vals_point, y_vals_line,
-                    y_vals_point, xerr, yerr)
-
-    if plot_type == "linear" or plot_type == "all":
-        linear_ellipse_plot(_max, ellipse_height, ellipse_width, header, nt, seq1, seq2, x_vals_point, y_vals_point)
+        compare_plot(header, log_max, nt, seq1, seq2, x_vals_line, x_vals_point, y_vals_line,
+                    y_vals_point, xerr, yerr, save_plot, pub)
 
 
-def linear_ellipse_plot(_max, ellipse_height, ellipse_width, header, nt, seq1, seq2, x_vals_point, y_vals_point):
-    # elipse
-    print("Interactive linear plot")
-    hover = HoverTool(
-        tooltips=[
-            ("(x,y)", "($x, $y)"),
-            ("header", "@Desc")
-        ]
-    )
-    linear_max = _max + _max / 5
-    p = figure(plot_width=600, plot_height=600,
-               x_range=(1, linear_max), y_range=(1, linear_max),
-               toolbar_location="above", tools=[hover, 'save', 'box_zoom', 'reset'])
-    source_point = ColumnDataSource(data=OrderedDict(x=x_vals_point,
-                                                     y=y_vals_point,
-                                                     Desc=header, )
-                                    )
-    source_ellipse = ColumnDataSource(data=OrderedDict(x=x_vals_point,
-                                                       y=y_vals_point, width=ellipse_width, height=ellipse_height,
-                                                       Desc=header, )
-                                      )
-    p.ellipse('x', 'y', 'width', 'height', source=source_ellipse, color=_nt_colour(nt), alpha=0.2)
-    p.circle('x', 'y', source=source_point, size=4, color=_nt_colour(nt))
-    p.line([1, linear_max], [1, linear_max])
-    p.xaxis.axis_label = seq1
-    p.yaxis.axis_label = seq2
-    show(p)
-
-
-def log_se_plot(header, line_header, log_max, nt, seq1, seq2, x_vals_line, x_vals_point, y_vals_line, y_vals_point,
-                xerr, yerr, save_plot=True, pub_plot=True):
+def compare_plot(header, log_max, nt, seq1, seq2, x_vals_line, x_vals_point, y_vals_line, y_vals_point,
+                xerr, yerr, save_plot, pub_plot):
     # Std Error bars
     print("Interactive log plot with se bars")
     hover = HoverTool(
@@ -446,24 +406,25 @@ def log_se_plot(header, line_header, log_max, nt, seq1, seq2, x_vals_line, x_val
     source_point = ColumnDataSource(data=OrderedDict(x=x_vals_point,
                                                      y=y_vals_point, Desc=header, )
                                     )
-    p.circle('x', 'y', name="circle", source=source_point, size=3, color=_nt_colour(nt))
+    p.circle('x', 'y', name="circle", source=source_point, size=3, color=_nt_colour(nt), legend="{0} nt".format(nt))
+    p.legend.location = "top_left"
     p.line([0.1, log_max], [0.1, log_max])
-    p.multi_line(xs=x_vals_line, ys=y_vals_line, color=_nt_colour(nt), alpha=0.5, )
+    if xerr !=[]:
+        p.multi_line(xs=x_vals_line, ys=y_vals_line, color=_nt_colour(nt), alpha=0.5, )
     p.xaxis.axis_label = seq1
     p.yaxis.axis_label = seq2
     show(p)
     if save_plot:
 
         fig = plt.figure(figsize=(8, 8))
+        if xerr!=[]:
+            plt.errorbar(x_vals_point, y_vals_point, xerr=xerr, yerr=yerr, capsize=0, ls='none', color=_nt_colour(nt),
+                         elinewidth=0.5)
         plt.grid(linestyle='-',alpha=0.2)
         plt.plot([0.1, log_max], [0.1, log_max], alpha=0.3)
-        plt.scatter(x_vals_point, y_vals_point, color=_nt_colour(nt), s=3)
+        plt.scatter(x_vals_point, y_vals_point, color=_nt_colour(nt), s=3, label="{0} nt".format(nt))
         plt.xlim([0.1,log_max])
         plt.ylim([0.1,log_max])
-
-        plt.errorbar(x_vals_point, y_vals_point, xerr=xerr, yerr=yerr, capsize=0, ls='none', color=_nt_colour(nt),
-                     elinewidth=0.5)
-
         plt.xscale('log')
         plt.yscale('log')
         if pub_plot:
@@ -471,28 +432,7 @@ def log_se_plot(header, line_header, log_max, nt, seq1, seq2, x_vals_line, x_val
         else:
             plt.xlabel(seq1)
             plt.ylabel(seq2)
+            plt.legend()
 
         plt.savefig('{0}_{1}_{2}.png'.format(seq1,seq2,nt), dpi=300)
-        plt.show()
-
-def log_dot_plot(header, log_max, nt, seq1, seq2, x_vals_point, y_vals_point):
-    print("Interactive log plot")
-    hover = HoverTool(
-        tooltips=[
-            ("(x,y)", "($x, $y)"),
-            ("header", "@Desc")
-        ]
-    )
-    p = figure(plot_width=600, plot_height=600,
-               x_axis_type="log", y_axis_type="log",
-               x_range=(0.1, log_max), y_range=(0.1, log_max),
-               toolbar_location="above", tools=[hover, 'save', 'box_zoom', 'reset'])
-    source = ColumnDataSource(data=OrderedDict(x=x_vals_point,
-                                               y=y_vals_point,
-                                               Desc=header, )
-                              )
-    p.circle('x', 'y', source=source, size=5, color=_nt_colour(nt))
-    p.line([0.1, log_max], [0.1, log_max])
-    p.xaxis.axis_label = seq1
-    p.yaxis.axis_label = seq2
-    show(p)
+        #plt.show()

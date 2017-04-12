@@ -38,6 +38,12 @@ def main(argv=None):
 
         parser_profile.add_argument('-s','--search', type=str, help="Full header or substring of header", nargs='*')
 
+        parser_profile.add_argument('-nt','--nt', type=str,help="Comma-seperated list of sRNA lengths to plot.  "
+                                                                "SCRAM2 alignment files must be available for each "
+                                                                "sRNA "
+                                                                "length")
+
+
         parser_profile.add_argument('-ylim', '--ylim',
                             type=float, help='+/- y axis limit',
                             default=0)
@@ -47,6 +53,9 @@ def main(argv=None):
         parser_profile.add_argument('-pub', '--publish', action='store_true',
                             default=False,
                             help='Remove all labels from profiles for editing for publication')
+        parser_profile.add_argument('-png', '--png', action='store_true',
+                            default=False,
+                            help='Export plot/s as 300 dpi .png file/s')
 
 
         #Compare plot
@@ -72,12 +81,15 @@ def main(argv=None):
             ylim = args.ylim
             pub = args.publish
             win = args.win
-            if a[-4:]==".csv" and a.split("_")[-1].split(".")[0].isdigit():
-                print("Attempting a single sRNA length plot\n")
-                pc.single_header_plot(search_term, a, cutoff, ylim, win, pub)
-            else:
-                print("Attempting a 21, 22, 24nt sRNA length plot\n")
-                pc.multi_header_plot(search_term, a, cutoff, ylim, win, pub)
+            nt_list=args.nt.split(',')
+            save_plot=args.png
+
+            # if a[-4:]==".csv" and a.split("_")[-1].split(".")[0].isdigit():
+            #     print("Attempting a single sRNA length plot\n")
+            #     pc.single_header_plot(search_term, a, cutoff, ylim, win, pub)
+            # else:
+            #     print("Attempting a 21, 22, 24nt sRNA length plot\n")
+            pc.multi_header_plot(nt_list,search_term, a, cutoff, ylim, win, pub, save_plot)
 
         if args.command == "compare":
             alignment_file = args.alignment

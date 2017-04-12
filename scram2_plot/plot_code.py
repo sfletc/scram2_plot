@@ -88,8 +88,6 @@ def extract_header_alignment(header, alignments):
     return [sorted_fwd_alignment, sorted_rvs_alignment, aln_count], ref_len
 
 
-
-
 def fill_in_zeros_se(fwd_rvs_align_list, ref_len, nt):
     """
     Generate alignment counts for every nucleotide in the reference
@@ -148,95 +146,69 @@ def _smoothed_for_plot_se(graph_processed, smooth_win_size):
     return y_fwd_smoothed_upper, y_fwd_smoothed_lower, y_rvs_smoothed_upper,  y_rvs_smoothed_lower
 
 
-def multi_header_plot(search_terms, in_files, cutoff, plot_y_lim, win, pub):
+def multi_header_plot(nt_list, search_terms, in_files, cutoff, plot_y_lim, win, pub, save_plot):
     """
     21,22,24nt profile plot
+    :param nt_list: 
     :param search_terms: header search terms list
     :param in_files: alignment files prefix
     :param cutoff: highest count of the most abundant alignment of 21,22,24 nt profiles
     :param plot_y_lim: set y limits on plot 
-    :param win: smoothign window size
+    :param win: smoothing window size
     :param pub: remove box and axis labels
     """
-
     select_win = False
     try:
-
-        print("Loading 21 nt Alignment File\n")
-        in_21, _ = import_scram2_den(in_files+"_21.csv")
-        print("Loading 22 nt Alignment File\n")
-        in_22, _ = import_scram2_den(in_files+"_22.csv")
-        print("Loading 24 nt Alignment File\n")
-        in_24, _ = import_scram2_den(in_files+"_24.csv")
+        alignment_file_list=[]
+        for nt in nt_list:
+            print("Loading {0} nt Alignment File\n".format(nt))
+            in_file, _ = import_scram2_den(in_files+"_"+nt+".csv")
+            alignment_file_list.append(in_file)
     except:
-        print("\n21nt, 22nt and 24nt alignment files are required to proceed")
+        print("\nProblem loading alignment files.  Possible a missing file for the sRNA lengths provided\n")
         sys.exit()
     substring = " ".join(search_terms)
 
     print("Extracting headers\n")
     all_keys=set()
-    for nt in [in_21, in_22, in_24]:
+    for nt in alignment_file_list:
         for header in nt.keys():
             all_keys.add(header)
     for header in all_keys:
         if substring.lower() in header.lower():
-            alignment_21, a = extract_header_alignment(header, in_21)
-            alignment_22, b = extract_header_alignment(header, in_22)
-            alignment_24, c = extract_header_alignment(header, in_24)
-            if alignment_21[2] >= cutoff or alignment_22[2] >= cutoff or alignment_24[2] >= cutoff:
+            header_alignment_tuple=()
+            ref_len_tuple=()
+            for alignment_file in alignment_file_list:
+                alignment, ref_len = extract_header_alignment(header, alignment_file)
+                header_alignment_tuple=header_alignment_tuple+(alignment,)
+                ref_len_tuple=ref_len_tuple+(ref_len,)
+            above_cutoff=False
+            for alignment in header_alignment_tuple:
+                if alignment[2]>=cutoff:
+                    above_cutoff=True
+            if above_cutoff:
+                plot_name = save_file_name(header[1:-2])
                 print (header)
-                ref_len = max(a, b, c)
+                max_ref_len = max(ref_len_tuple)
                 if win ==0 or select_win:
-                    win = int(ref_len / 30)
+                    win = int(max_ref_len / 30)
                     select_win=True
                 if win % 2 != 0 or win == 0: win += 1
-                graph_processed_21 = fill_in_zeros_se(alignment_21, ref_len, 21)
-                graph_processed_22 = fill_in_zeros_se(alignment_22, ref_len, 22)
-                graph_processed_24 = fill_in_zeros_se(alignment_24, ref_len, 24)
-                x_ref = graph_processed_21[0]
-                y_fwd_smoothed_upper_21, y_fwd_smoothed_lower_21, y_rvs_smoothed_upper_21, y_rvs_smoothed_lower_21 = _smoothed_for_plot_se(graph_processed_21, win)
-                y_fwd_smoothed_upper_22, y_fwd_smoothed_lower_22, y_rvs_smoothed_upper_22, y_rvs_smoothed_lower_22 = _smoothed_for_plot_se(graph_processed_22, win)
-                y_fwd_smoothed_upper_24, y_fwd_smoothed_lower_24, y_rvs_smoothed_upper_24, y_rvs_smoothed_lower_24 = _smoothed_for_plot_se(graph_processed_24, win)
-                den_multi_plot_21_22_24_se(x_ref, y_fwd_smoothed_upper_21, y_fwd_smoothed_lower_21,
-                                           y_rvs_smoothed_upper_21, y_rvs_smoothed_lower_21,
-                                           y_fwd_smoothed_upper_22, y_fwd_smoothed_lower_22,
-                                           y_rvs_smoothed_upper_22, y_rvs_smoothed_lower_22,
-                                           y_fwd_smoothed_upper_24, y_fwd_smoothed_lower_24,
-                                           y_rvs_smoothed_upper_24, y_rvs_smoothed_lower_24,
-                                           header, plot_y_lim, pub)
+                graph_processed_list=[]
+                nt_pos=0
+                for alignment in header_alignment_tuple:
+                    graph_processed_list.append(fill_in_zeros_se(alignment,max_ref_len,nt_list[nt_pos]))
+                    nt_pos+=1
 
-def single_header_plot(search_terms, in_file, cutoff, plot_y_lim, win, pub):
-    """
+                x_ref = graph_processed_list[0][0]
+                smoothed_for_plot_tuple=()
+                for graph_processed in graph_processed_list:
+                    y_fwd_smoothed_upper, y_fwd_smoothed_lower, y_rvs_smoothed_upper, \
+                    y_rvs_smoothed_lower = _smoothed_for_plot_se(graph_processed, win)
+                    smoothed_for_plot_tuple=smoothed_for_plot_tuple+((y_fwd_smoothed_upper, y_fwd_smoothed_lower,
+                                                                      y_rvs_smoothed_upper, y_rvs_smoothed_lower),)
 
-    :param f:
-    :param no_display:
-    :param pub:
-    :param search_terms:
-    :param in_file:
-    :param cutoff:
-    :param plot_y_lim:
-    :return:
-    """
-    select_win = False
-    substring = " ".join(search_terms)
-    print("Loading Alignment Files\n")
-    in_x, nt = import_scram2_den(in_file)
-    print("Extracting headers\n")
-    for header in in_x.keys():
-        if substring.lower() in header.lower():
-            alignment_x, ref_len = extract_header_alignment(header, in_x)
-            if alignment_x[2] >= cutoff:
-                print(header)
-                if win ==0 or select_win:
-                    win = int(ref_len / 30)
-                    select_win=True
-                if win % 2 != 0 or win == 0: win += 1
-                graph_processed_x = fill_in_zeros_se(alignment_x, ref_len, nt)
-                x_ref = graph_processed_x[0]
-                y_fwd_smoothed_upper, y_fwd_smoothed_lower, y_rvs_smoothed_upper, y_rvs_smoothed_lower = _smoothed_for_plot_se(graph_processed_x, win)
-                den_plot_se(x_ref, y_fwd_smoothed_upper, y_fwd_smoothed_lower, y_rvs_smoothed_upper, y_rvs_smoothed_lower,
-                            nt, header, plot_y_lim, pub)
-
+                den_multi_plot(nt_list, x_ref, smoothed_for_plot_tuple, header, plot_y_lim, pub, save_plot, plot_name)
 
 
 def smooth(x, window_len, window='hamming'):
@@ -270,73 +242,22 @@ def smooth(x, window_len, window='hamming'):
     return y[int(window_len / 2 - 1):-int(window_len / 2)]
 
 
+def den_multi_plot(nt_list, x_ref, smoothed_for_plot_tuple, header, plot_y_lim, pub, save_plot, plot_name):
 
-def den_plot_se(x_ref, y_fwd_smoothed_upper, y_fwd_smoothed_lower, y_rvs_smoothed_upper, y_rvs_smoothed_lower,
-                nt, xlab, plot_y_lim, pub):
-    """
-
-    :param f:
-    :param no_display:
-    :param plot_y_lim:
-    :param pub:
-    :param x_ref:
-    :param y_fwd_smoothed_upper:
-    :param y_fwd_smoothed_lower:
-    :param y_rvs_smoothed_upper:
-    :param y_rvs_smoothed_lower:
-    :param nt:
-    :param xlab:
-    :return:
-    """
     fig = plt.figure(figsize=(10, 5))
-    plt.plot(x_ref, y_fwd_smoothed_upper, color=_nt_colour(nt), label='{0} nt'.format(nt), lw=1, alpha=0.2)
-    plt.plot(x_ref, y_fwd_smoothed_lower, color=_nt_colour(nt), lw=1, alpha=0.2)
-    plt.fill_between(x_ref, y_fwd_smoothed_upper,y_fwd_smoothed_lower, color=_nt_colour(nt), alpha=0.5)
-    plt.plot(x_ref, y_rvs_smoothed_upper, color=_nt_colour(nt), lw=1, alpha=0.2)
-    plt.plot(x_ref, y_rvs_smoothed_lower, color=_nt_colour(nt), lw=1, alpha=0.2)
-    plt.fill_between(x_ref, y_rvs_smoothed_upper,y_rvs_smoothed_lower, color=_nt_colour(nt), alpha=0.5)
-    axhline(y=0)
-    if pub:
-        _pub_plot()
-    else:
-        xlabel(xlab)
-        ylabel('Reads per million reads')
-        plt.legend(loc='best', fancybox=True, framealpha=0.5)
-    _generate_profile(plot_y_lim)
-    _generate_profile(plot_y_lim)
-
-
-def den_multi_plot_21_22_24_se(x_ref, y_fwd_smoothed_upper_21, y_fwd_smoothed_lower_21,
-                           y_rvs_smoothed_upper_21, y_rvs_smoothed_lower_21,
-                           y_fwd_smoothed_upper_22, y_fwd_smoothed_lower_22,
-                           y_rvs_smoothed_upper_22, y_rvs_smoothed_lower_22,
-                           y_fwd_smoothed_upper_24, y_fwd_smoothed_lower_24,
-                           y_rvs_smoothed_upper_24, y_rvs_smoothed_lower_24,
-                           header, plot_y_lim, pub):
-    fig = plt.figure(figsize=(10, 5))
-    #21
-    plt.plot(x_ref, y_fwd_smoothed_upper_21, color=_nt_colour(21), label='{0} nt'.format(21), lw=1, alpha=0.2)
-    plt.plot(x_ref, y_fwd_smoothed_lower_21, color=_nt_colour(21), lw=1, alpha=0.2)
-    plt.fill_between(x_ref, y_fwd_smoothed_upper_21,y_fwd_smoothed_lower_21, color=_nt_colour(21), alpha=0.5)
-    plt.plot(x_ref, y_rvs_smoothed_upper_21, color=_nt_colour(21), lw=1, alpha=0.2)
-    plt.plot(x_ref, y_rvs_smoothed_lower_21, color=_nt_colour(21), lw=1, alpha=0.2)
-    plt.fill_between(x_ref, y_rvs_smoothed_upper_21,y_rvs_smoothed_lower_21, color=_nt_colour(21), alpha=0.5)
-    #22
-    plt.plot(x_ref, y_fwd_smoothed_upper_22, color=_nt_colour(22), label='{0} nt'.format(22), lw=1, alpha=0.2)
-    plt.plot(x_ref, y_fwd_smoothed_lower_22, color=_nt_colour(22), lw=1, alpha=0.2)
-    plt.fill_between(x_ref, y_fwd_smoothed_upper_22,y_fwd_smoothed_lower_22, color=_nt_colour(22), alpha=0.5)
-    plt.plot(x_ref, y_rvs_smoothed_upper_22, color=_nt_colour(22), lw=1, alpha=0.2)
-    plt.plot(x_ref, y_rvs_smoothed_lower_22, color=_nt_colour(22), lw=1, alpha=0.2)
-    plt.fill_between(x_ref, y_rvs_smoothed_upper_22,y_rvs_smoothed_lower_22, color=_nt_colour(22), alpha=0.5)
-    #24
-    plt.plot(x_ref, y_fwd_smoothed_upper_24, color=_nt_colour(24), label='{0} nt'.format(24), lw=1, alpha=0.2)
-    plt.plot(x_ref, y_fwd_smoothed_lower_24, color=_nt_colour(24), lw=1, alpha=0.2)
-    plt.fill_between(x_ref, y_fwd_smoothed_upper_24,y_fwd_smoothed_lower_24, color=_nt_colour(24), alpha=0.5)
-    plt.plot(x_ref, y_rvs_smoothed_upper_24, color=_nt_colour(24), lw=1, alpha=0.2)
-    plt.plot(x_ref, y_rvs_smoothed_lower_24, color=_nt_colour(24), lw=1, alpha=0.2)
-    plt.fill_between(x_ref, y_rvs_smoothed_upper_24,y_rvs_smoothed_lower_24, color=_nt_colour(24), alpha=0.5)
-    
-    
+    nt_pos=0
+    for smoothed_for_plot in smoothed_for_plot_tuple:
+        plt.plot(x_ref, smoothed_for_plot[0], color=_nt_colour(int(nt_list[nt_pos])), label='{0} nt'.format(nt_list[
+                                                                                                            nt_pos]),
+                 lw=1, alpha=0.2)
+        plt.plot(x_ref, smoothed_for_plot[1], color=_nt_colour(int(nt_list[nt_pos])), lw=1, alpha=0.2)
+        plt.fill_between(x_ref, smoothed_for_plot[0], smoothed_for_plot[1], color=_nt_colour(int(nt_list[nt_pos])),
+                         alpha=0.5)
+        plt.plot(x_ref, smoothed_for_plot[2], color=_nt_colour(int(nt_list[nt_pos])), lw=1, alpha=0.2)
+        plt.plot(x_ref, smoothed_for_plot[3], color=_nt_colour(int(nt_list[nt_pos])), lw=1, alpha=0.2)
+        plt.fill_between(x_ref, smoothed_for_plot[2], smoothed_for_plot[3], color=_nt_colour(int(nt_list[nt_pos])),
+                         alpha=0.5)
+        nt_pos+=1
     axhline(y=0)
     if pub:
         _pub_plot()
@@ -344,21 +265,12 @@ def den_multi_plot_21_22_24_se(x_ref, y_fwd_smoothed_upper_21, y_fwd_smoothed_lo
         xlabel(header)
         ylabel('Reads per million reads')
         plt.legend(loc='best', fancybox=True, framealpha=0.5)
-    _generate_profile(plot_y_lim)
-    
-def _generate_profile(plot_y_lim):
-    """
-    Generate profile
-    :param file_fig: output plot to pdf (bool)
-    :param file_name: output filename (str)
-    :param onscreen: show plot on screen (bool)
-    :param plot_y_lim: + / - y-axis limit (int)
-    """
     if plot_y_lim != 0:
         ylim(-plot_y_lim, plot_y_lim)
-    #fig1 = plt.gcf()
+    if save_plot:
+        plt.savefig('{0}.png'.format(plot_name),dpi=300)
     plt.show()
-    #plt.close(fig1)
+
 
 def _pub_plot():
     """
@@ -377,6 +289,17 @@ def _pub_plot():
         labelsize=15)  # labels along the bottom edge are off
     _clear_frame()
 
+def save_file_name(header):
+    out_file_name=""
+    for i in header:
+        if len(out_file_name)>100:
+            break
+        else:
+            if i==" " or not i.isalnum():
+                out_file_name+="_"
+            else:
+                out_file_name+=i
+    return out_file_name
 
 def _clear_frame(ax=None):
     """
@@ -418,12 +341,14 @@ def cdp_plot_bokeh(file_name, seq1, seq2, plot_type, browser):
     x_vals_line = []
     x_vals_point = []
     ellipse_width=[]
+    xerr=[]
     max_x=0.0
     y_vals_line = []
     y_vals_point = []
     ellipse_height=[]
     header=[]
     line_header=[]
+    yerr=[]
     max_y=0.0
     try:
         nt = int(file_name.strip().split('.')[-2][-2:])
@@ -444,11 +369,12 @@ def cdp_plot_bokeh(file_name, seq1, seq2, plot_type, browser):
                 line[0]=line[0].strip()
                 x_se = [float(line[-4])-float(line[-3]), float(line[-4])+float(line[-3])]
                 y_se = [float(line[-2])-float(line[-1]), float(line[-2])+float(line[-1])]
-
+                xerr.append(float(line[-3]))
                 x_vals_line.append(x_se)
                 y_vals_line.append([float(line[-2]),float(line[-2])])
                 x_vals_line.append([float(line[-4]),float(line[-4])])
                 y_vals_line.append(y_se)
+                yerr.append(float(line[-1]))
                 #point
                 x_vals_point.append(float(line[-4]))
                 y_vals_point.append(float(line[-2]))
@@ -466,7 +392,8 @@ def cdp_plot_bokeh(file_name, seq1, seq2, plot_type, browser):
     if plot_type=="log" or plot_type=="all":
         log_dot_plot(header, log_max, nt, seq1, seq2, x_vals_point, y_vals_point)
     if plot_type == "log_error" or plot_type == "all":
-        log_se_plot(header, line_header, log_max, nt, seq1, seq2, x_vals_line, x_vals_point, y_vals_line, y_vals_point)
+        log_se_plot(header, line_header, log_max, nt, seq1, seq2, x_vals_line, x_vals_point, y_vals_line,
+                    y_vals_point, xerr, yerr)
 
     if plot_type == "linear" or plot_type == "all":
         linear_ellipse_plot(_max, ellipse_height, ellipse_width, header, nt, seq1, seq2, x_vals_point, y_vals_point)
@@ -501,14 +428,16 @@ def linear_ellipse_plot(_max, ellipse_height, ellipse_width, header, nt, seq1, s
     show(p)
 
 
-def log_se_plot(header, line_header, log_max, nt, seq1, seq2, x_vals_line, x_vals_point, y_vals_line, y_vals_point):
+def log_se_plot(header, line_header, log_max, nt, seq1, seq2, x_vals_line, x_vals_point, y_vals_line, y_vals_point,
+                xerr, yerr, save_plot=True):
     # Std Error bars
     print("Interactive log plot with se bars")
     hover = HoverTool(
         tooltips=[
             ("(x,y)", "($x, $y)"),
             ("header", "@Desc")
-        ]
+        ],
+        names=["circle",]
     )
     p = figure(plot_width=600, plot_height=600,
                x_axis_type="log", y_axis_type="log",
@@ -517,17 +446,30 @@ def log_se_plot(header, line_header, log_max, nt, seq1, seq2, x_vals_line, x_val
     source_point = ColumnDataSource(data=OrderedDict(x=x_vals_point,
                                                      y=y_vals_point, Desc=header, )
                                     )
-    source_line = ColumnDataSource(data=OrderedDict(x=x_vals_line,
-                                                    y=y_vals_line, )
-                                   )
-    
-    p.circle('x', 'y', source=source_point, size=2, color=_nt_colour(nt))
+    p.circle('x', 'y', name="circle", source=source_point, size=3, color=_nt_colour(nt))
     p.line([0.1, log_max], [0.1, log_max])
     p.multi_line(xs=x_vals_line, ys=y_vals_line, color=_nt_colour(nt), alpha=0.5, )
     p.xaxis.axis_label = seq1
     p.yaxis.axis_label = seq2
     show(p)
+    if save_plot:
 
+        fig = plt.figure(figsize=(8, 8))
+        plt.grid(linestyle='-',alpha=0.2)
+        plt.plot([0.1, log_max], [0.1, log_max], alpha=0.3)
+        plt.scatter(x_vals_point, y_vals_point, color=_nt_colour(nt), s=3)
+        plt.xlim([0.1,log_max])
+        plt.ylim([0.1,log_max])
+        plt.xlabel(seq1)
+        plt.ylabel(seq2)
+        plt.errorbar(x_vals_point, y_vals_point, xerr=xerr, yerr=yerr, capsize=0, ls='none', color=_nt_colour(nt),
+                     elinewidth=0.5)
+
+        plt.xscale('log')
+        plt.yscale('log')
+
+        plt.savefig('{0}_{1}_{2}.png'.format(seq1,seq2,nt), dpi=300)
+        plt.show()
 
 def log_dot_plot(header, log_max, nt, seq1, seq2, x_vals_point, y_vals_point):
     print("Interactive log plot")

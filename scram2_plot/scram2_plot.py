@@ -69,8 +69,8 @@ def main(argv=None):
                                 help='x label - corresponds to -s1 treatment in SCRAM2 arguments', nargs='*')
         parser_cdp.add_argument('-ylab', '--y_label', default=["Treatment 2"],
                                 help='y label - corresponds to -s2 treatment in SCRAM2 arguments', nargs='*')
-        parser_cdp.add_argument('-browser', '--browser', default=False, action='store_true',
-                                help='If not using Jupyter Notebook, output interactive plot to browser')
+        parser_cdp.add_argument('-html', '--html', default=False, action='store_true',
+                                help='If not using Jupyter Notebook, output interactive plot to browser as save to .html')
         parser_cdp.add_argument('-pub', '--publish', action='store_true',
                             default=False,
                             help='Remove all labels from profiles for editing for publication')
@@ -99,7 +99,7 @@ def main(argv=None):
             xlab= " ".join(args.x_label)
             ylab= " ".join(args.y_label)
             plot_type=args.plot_type
-            browser=args.browser
+            browser=args.html
             save_plot=args.png
             pub = args.publish
             pc.cdp_plot_bokeh(alignment_prefix, nt_list, xlab, ylab, plot_type, browser, save_plot, pub)

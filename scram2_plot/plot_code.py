@@ -183,7 +183,10 @@ def multi_header_plot(nt_list, search_terms, in_files, cutoff, plot_y_lim, win, 
                 if alignment[2]>=cutoff:
                     above_cutoff=True
             if above_cutoff:
-                plot_name = save_file_name(header[1:-2])
+                if header[0]=='"':
+                    plot_name = save_file_name(header[1:-2])
+                else:
+                    plot_name = save_file_name(header)
                 print (header)
                 max_ref_len = max(ref_len_tuple)
                 if win ==0 or select_win:

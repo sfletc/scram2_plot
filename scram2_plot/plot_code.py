@@ -184,9 +184,9 @@ def multi_header_plot(nt_list, search_terms, in_files, cutoff, plot_y_lim, win, 
                     above_cutoff=True
             if above_cutoff:
                 if header[0]=='"':
-                    plot_name = save_file_name(header[1:-2])
+                    plot_name = save_file_name(in_files, header[1:-2])
                 else:
-                    plot_name = save_file_name(header)
+                    plot_name = save_file_name(in_files, header)
                 print (header)
                 max_ref_len = max(ref_len_tuple)
                 if win ==0 or select_win:
@@ -288,8 +288,8 @@ def _pub_plot():
         labelsize=15)  # labels along the bottom edge are off
     _clear_frame()
 
-def save_file_name(header):
-    out_file_name=""
+def save_file_name(in_files, header):
+    out_file_name=in_files+"_"
     for i in header:
         if len(out_file_name)>100:
             break
@@ -391,14 +391,15 @@ def compare_plot_prepare(file_name, nt, browser, plot_type, pub, save_plot, seq1
     log_max = _max + _max / 2
     csvfile.close()
     # Interactive
+    file_path=file_name.rsplit('/',1)[0]
     if plot_type == "log" or plot_type == "all":
-        compare_plot(header, log_max, nt, seq1, seq2, [], x_vals_point, [], y_vals_point, [], [], save_plot, pub)
+        compare_plot(file_path,header, log_max, nt, seq1, seq2, [], x_vals_point, [], y_vals_point, [], [], save_plot, pub)
     if plot_type == "log_error" or plot_type == "all":
-        compare_plot(header, log_max, nt, seq1, seq2, x_vals_line, x_vals_point, y_vals_line,
+        compare_plot(file_path,header, log_max, nt, seq1, seq2, x_vals_line, x_vals_point, y_vals_line,
                      y_vals_point, xerr, yerr, save_plot, pub)
 
 
-def compare_plot(header, log_max, nt, seq1, seq2, x_vals_line, x_vals_point, y_vals_line, y_vals_point,
+def compare_plot(file_path, header, log_max, nt, seq1, seq2, x_vals_line, x_vals_point, y_vals_line, y_vals_point,
                 xerr, yerr, save_plot, pub_plot):
     # Std Error bars
     hover = HoverTool(
@@ -443,5 +444,5 @@ def compare_plot(header, log_max, nt, seq1, seq2, x_vals_line, x_vals_point, y_v
             plt.ylabel(seq2)
             plt.legend()
 
-        plt.savefig('{0}_{1}_{2}.png'.format(seq1,seq2,nt), dpi=300)
+        plt.savefig(file_path+'/{0}_{1}_{2}.png'.format(seq1,seq2,nt), dpi=300)
         #plt.show()

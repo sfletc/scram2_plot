@@ -95,7 +95,7 @@ def main(argv=None):
 
         if args.command == "compare":
             alignment_prefix = args.alignment
-            nt_list=args.nt.split(',')
+            nt_list = args.length.split(',')
             xlab= " ".join(args.x_label)
             ylab= " ".join(args.y_label)
             plot_type=args.plot_type

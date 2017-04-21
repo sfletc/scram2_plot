@@ -61,7 +61,7 @@ def main(argv=None):
         parser_cdp.add_argument('-a', '--alignment',
                             type=str, help="sRNA alignment file prefix used by SCRAM2 profile (i.e. exclude _21.csv, _22.csv, "
                                            "_24.csv)")
-        parser_cdp.add_argument('-nt','--nt', type=str,help="Comma-seperated list of sRNA lengths to plot.  "
+        parser_cdp.add_argument('-l','--length', type=str,help="Comma-seperated list of sRNA lengths to plot.  "
                                                                 "SCRAM2 alignment files must be available for each "
                                                                 "sRNA "
                                                                 "length")
@@ -89,7 +89,7 @@ def main(argv=None):
             ylim = args.ylim
             pub = args.publish
             win = args.win
-            nt_list=args.nt.split(',')
+            nt_list=args.length.split(',')
             save_plot=args.png
             pc.multi_header_plot(nt_list,search_term, alignment_prefix, cutoff, ylim, win, pub, save_plot)
 

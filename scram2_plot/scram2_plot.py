@@ -34,7 +34,7 @@ def main(argv=None):
 
         parser_profile.add_argument('-s','--search', type=str, help="Full header or substring of header", nargs='*')
 
-        parser_profile.add_argument('-nt','--nt', type=str,help="Comma-seperated list of sRNA lengths to plot.  "
+        parser_profile.add_argument('-l','--length', type=str,help="Comma-separated list of sRNA lengths to plot.  "
                                                                 "SCRAM2 alignment files must be available for each "
                                                                 "sRNA "
                                                                 "length")

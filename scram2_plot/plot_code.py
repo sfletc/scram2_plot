@@ -47,7 +47,7 @@ def import_scram2_den(in_file):
             if first_line:
                 first_line = False
             else:
-                line = line.strip().rsplit(',', 5)
+                line = line.strip().rsplit(',', 6)
                 srna_len = len(line[2])
                 if line[0] not in alignments:
                     alignments[line[0]] = [(int(line[1]), DNA(line[2]), int(line[3]), float(line[4]),float(line[5]))]
@@ -157,8 +157,9 @@ def multi_header_plot(nt_list, search_terms, in_files, cutoff, plot_y_lim, win, 
     try:
         alignment_file_list=[]
         for nt in nt_list:
-            print("Loading {0} nt Alignment File\n".format(nt))
-            in_file, _ = import_scram2_den(in_files+"_"+nt+".csv")
+            file_name = in_files+"_"+nt+".csv"
+            print("Loading {0} \n".format(file_name))
+            in_file, _ = import_scram2_den(file_name)
             alignment_file_list.append(in_file)
     except:
         print("\nProblem loading alignment files.  Possibly a missing file for the sRNA lengths provided\n")
@@ -340,27 +341,21 @@ def cdp_plot_bokeh(file_prefix, nt_list, seq1, seq2, plot_type, browser, save_pl
 
 
 def compare_plot_prepare(file_name, nt, browser, plot_type, pub, save_plot, seq1, seq2):
-    #output_notebook()
+    file_path = file_name.rsplit('/', 1)[0]
     if browser:
-        output_file("plot.html")
+        output_file(file_path+'/{0}_{1}_{2}.html'.format(seq1,seq2,nt))
     else:
         output_notebook(hide_banner=True)
     first_line = True
     x_vals_line = []
     x_vals_point = []
-    # ellipse_width=[]
     xerr = []
     max_x = 0.0
     y_vals_line = []
     y_vals_point = []
-    # ellipse_height=[]
     header = []
     yerr = []
     max_y = 0.0
-    # try:
-    #     nt = int(file_name.strip().split('.')[-2][-2:])
-    # except:
-    #     nt = 20  # this is just for plot colour, so makes black if nt can't be parsed from filename
     with open(file_name) as csvfile:
         line_reader = csv.reader(csvfile)
         for line in line_reader:
@@ -391,7 +386,7 @@ def compare_plot_prepare(file_name, nt, browser, plot_type, pub, save_plot, seq1
     log_max = _max + _max / 2
     csvfile.close()
     # Interactive
-    file_path=file_name.rsplit('/',1)[0]
+
     if plot_type == "log" or plot_type == "all":
         compare_plot(file_path,header, log_max, nt, seq1, seq2, [], x_vals_point, [], y_vals_point, [], [], save_plot, pub)
     if plot_type == "log_error" or plot_type == "all":

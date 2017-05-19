@@ -40,19 +40,21 @@ def import_scram2_den(in_file):
     :return: alignments dictionary and snra length in the alignment
     """
     alignments = {}
-    srna_len=0
+    srna_len = 0
     with open(in_file, 'r') as f:
         first_line = True
         for line in f:
             if first_line:
                 first_line = False
             else:
-                line = line.strip().rsplit(',', 6)
+                line = line.strip().rsplit(',', 7)
                 srna_len = len(line[2])
                 if line[0] not in alignments:
-                    alignments[line[0]] = [(int(line[1]), DNA(line[2]), int(line[3]), float(line[4]),float(line[5]))]
+                    alignments[line[0]] = [(int(line[1]), DNA(line[2]), int(line[3]), line[4], float(line[5]),
+                                            float(line[6]))]
                 else:
-                    alignments[line[0]].append((int(line[1]), DNA(line[2]), int(line[3]), float(line[4]),float(line[5])))
+                    alignments[line[0]].append(
+                        (int(line[1]), DNA(line[2]), int(line[3]), line[4], float(line[5]), float(line[6])))
     return alignments, srna_len
 
 
@@ -71,12 +73,12 @@ def extract_header_alignment(header, alignments):
         ref_len = 0
         for alignment in extracted_alignments:
             ref_len = alignment[0]
-            if alignment[3] > 0:
-                sorted_fwd_alignment.append((alignment[2], alignment[3], alignment[4]))
-                aln_count += alignment[3]
-            elif alignment[3] < 0:
-                sorted_rvs_alignment.append((alignment[2], alignment[3], alignment[4]))
-                aln_count -= alignment[3]
+            if alignment[3] =="+":
+                sorted_fwd_alignment.append((alignment[2], alignment[4], alignment[5]))
+                ##aln_count += alignment[3]
+            elif alignment[3] =="-":
+                sorted_rvs_alignment.append((alignment[2], -alignment[4], alignment[5]))
+            aln_count += alignment[4]
     except:
         sorted_fwd_alignment = []
         sorted_rvs_alignment = []
@@ -124,6 +126,7 @@ def fill_in_zeros_se(fwd_rvs_align_list, ref_len):
     return reference_x_axis, fwd_alignment_y_axis_upper, fwd_alignment_y_axis_lower, \
            revs_alignment_y_axis_upper, revs_alignment_y_axis_lower
 
+
 def _smoothed_for_plot_se(graph_processed, smooth_win_size):
     """
     Return fwd and rvs smoothed profiles
@@ -132,14 +135,14 @@ def _smoothed_for_plot_se(graph_processed, smooth_win_size):
     :return: list of smoothed fwd and rvs upper and lower se bound
     """
     y_fwd_smoothed_upper = smooth(numpy.array(graph_processed[1]),
-                            smooth_win_size, window='blackman')
+                                  smooth_win_size, window='blackman')
     y_fwd_smoothed_lower = smooth(numpy.array(graph_processed[2]),
-                            smooth_win_size, window='blackman')
+                                  smooth_win_size, window='blackman')
     y_rvs_smoothed_upper = smooth(numpy.array(graph_processed[3]),
-                            smooth_win_size, window='blackman')
+                                  smooth_win_size, window='blackman')
     y_rvs_smoothed_lower = smooth(numpy.array(graph_processed[4]),
-                            smooth_win_size, window='blackman')
-    return y_fwd_smoothed_upper, y_fwd_smoothed_lower, y_rvs_smoothed_upper,  y_rvs_smoothed_lower
+                                  smooth_win_size, window='blackman')
+    return y_fwd_smoothed_upper, y_fwd_smoothed_lower, y_rvs_smoothed_upper, y_rvs_smoothed_lower
 
 
 def multi_header_plot(nt_list, search_terms, in_files, cutoff, plot_y_lim, win, pub, save_plot):
@@ -155,9 +158,9 @@ def multi_header_plot(nt_list, search_terms, in_files, cutoff, plot_y_lim, win, 
     """
     select_win = False
     try:
-        alignment_file_list=[]
+        alignment_file_list = []
         for nt in nt_list:
-            file_name = in_files+"_"+nt+".csv"
+            file_name = in_files + "_" + nt + ".csv"
             print("Loading {0} \n".format(file_name))
             in_file, _ = import_scram2_den(file_name)
             alignment_file_list.append(in_file)
@@ -167,46 +170,46 @@ def multi_header_plot(nt_list, search_terms, in_files, cutoff, plot_y_lim, win, 
     substring = " ".join(search_terms)
 
     print("Extracting headers\n")
-    all_keys=set()
+    all_keys = set()
     for nt in alignment_file_list:
         for header in nt.keys():
             all_keys.add(header)
     for header in all_keys:
         if substring.lower() in header.lower():
-            header_alignment_tuple=()
-            ref_len_tuple=()
+            header_alignment_tuple = ()
+            ref_len_tuple = ()
             for alignment_file in alignment_file_list:
                 alignment, ref_len = extract_header_alignment(header, alignment_file)
-                header_alignment_tuple=header_alignment_tuple+(alignment,)
-                ref_len_tuple=ref_len_tuple+(ref_len,)
-            above_cutoff=False
+                header_alignment_tuple = header_alignment_tuple + (alignment,)
+                ref_len_tuple = ref_len_tuple + (ref_len,)
+            above_cutoff = False
             for alignment in header_alignment_tuple:
-                if alignment[2]>=cutoff:
-                    above_cutoff=True
+                if alignment[2] >= cutoff:
+                    above_cutoff = True
             if above_cutoff:
-                if header[0]=='"':
+                if header[0] == '"':
                     plot_name = save_file_name(in_files, header[1:-2])
                 else:
                     plot_name = save_file_name(in_files, header)
-                print (header)
+                print(header)
                 max_ref_len = max(ref_len_tuple)
-                if win ==0 or select_win:
+                if win == 0 or select_win:
                     win = int(max_ref_len / 30)
-                    select_win=True
+                    select_win = True
                 if win % 2 != 0 or win == 0: win += 1
-                graph_processed_list=[]
-                nt_pos=0
+                graph_processed_list = []
+                nt_pos = 0
                 for alignment in header_alignment_tuple:
                     graph_processed_list.append(fill_in_zeros_se(alignment, max_ref_len))
-                    nt_pos+=1
+                    nt_pos += 1
 
                 x_ref = graph_processed_list[0][0]
-                smoothed_for_plot_tuple=()
+                smoothed_for_plot_tuple = ()
                 for graph_processed in graph_processed_list:
                     y_fwd_smoothed_upper, y_fwd_smoothed_lower, y_rvs_smoothed_upper, \
                     y_rvs_smoothed_lower = _smoothed_for_plot_se(graph_processed, win)
-                    smoothed_for_plot_tuple=smoothed_for_plot_tuple+((y_fwd_smoothed_upper, y_fwd_smoothed_lower,
-                                                                      y_rvs_smoothed_upper, y_rvs_smoothed_lower),)
+                    smoothed_for_plot_tuple = smoothed_for_plot_tuple + ((y_fwd_smoothed_upper, y_fwd_smoothed_lower,
+                                                                          y_rvs_smoothed_upper, y_rvs_smoothed_lower),)
 
                 den_multi_plot(nt_list, x_ref, smoothed_for_plot_tuple, header, plot_y_lim, pub, save_plot, plot_name)
 
@@ -243,12 +246,11 @@ def smooth(x, window_len, window='hamming'):
 
 
 def den_multi_plot(nt_list, x_ref, smoothed_for_plot_tuple, header, plot_y_lim, pub, save_plot, plot_name):
-
     fig = plt.figure(figsize=(10, 5))
-    nt_pos=0
+    nt_pos = 0
     for smoothed_for_plot in smoothed_for_plot_tuple:
         plt.plot(x_ref, smoothed_for_plot[0], color=_nt_colour(int(nt_list[nt_pos])), label='{0} nt'.format(nt_list[
-                                                                                                            nt_pos]),
+                                                                                                                nt_pos]),
                  lw=1, alpha=0.2)
         plt.plot(x_ref, smoothed_for_plot[1], color=_nt_colour(int(nt_list[nt_pos])), lw=1, alpha=0.2)
         plt.fill_between(x_ref, smoothed_for_plot[0], smoothed_for_plot[1], color=_nt_colour(int(nt_list[nt_pos])),
@@ -257,7 +259,7 @@ def den_multi_plot(nt_list, x_ref, smoothed_for_plot_tuple, header, plot_y_lim, 
         plt.plot(x_ref, smoothed_for_plot[3], color=_nt_colour(int(nt_list[nt_pos])), lw=1, alpha=0.2)
         plt.fill_between(x_ref, smoothed_for_plot[2], smoothed_for_plot[3], color=_nt_colour(int(nt_list[nt_pos])),
                          alpha=0.5)
-        nt_pos+=1
+        nt_pos += 1
     axhline(y=0)
     if pub:
         _pub_plot()
@@ -268,7 +270,7 @@ def den_multi_plot(nt_list, x_ref, smoothed_for_plot_tuple, header, plot_y_lim, 
     if plot_y_lim != 0:
         ylim(-plot_y_lim, plot_y_lim)
     if save_plot:
-        plt.savefig('{0}.png'.format(plot_name),dpi=300)
+        plt.savefig('{0}.png'.format(plot_name), dpi=300)
     plt.show()
 
 
@@ -289,17 +291,19 @@ def _pub_plot():
         labelsize=15)  # labels along the bottom edge are off
     _clear_frame()
 
+
 def save_file_name(in_files, header):
-    out_file_name=in_files+"_"
+    out_file_name = in_files + "_"
     for i in header:
-        if len(out_file_name)>100:
+        if len(out_file_name) > 100:
             break
         else:
-            if i==" " or not i.isalnum():
-                out_file_name+="_"
+            if i == " " or not i.isalnum():
+                out_file_name += "_"
             else:
-                out_file_name+=i
+                out_file_name += i
     return out_file_name
+
 
 def _clear_frame(ax=None):
     """
@@ -319,31 +323,31 @@ def _nt_colour(nt):
     :param nt: aligned read length (int)
     :return: colour code (str)
     """
-    hex_dict={18:'#669999',19:'#33cccc',20:'#33cccc',21:'#00CC00',
-              22:'#FF3399',23:'#339933',24:'#3333FF',25:'#cccc00',
-              26:'#660033',27:'#996600',28:'#336699',29:'#ff6600',
-              30:'#ff99ff',31:'#669900',32:'#993333'}
+    hex_dict = {18: '#669999', 19: '#33cccc', 20: '#33cccc', 21: '#00CC00',
+                22: '#FF3399', 23: '#339933', 24: '#3333FF', 25: '#cccc00',
+                26: '#660033', 27: '#996600', 28: '#336699', 29: '#ff6600',
+                30: '#ff99ff', 31: '#669900', 32: '#993333'}
 
     if nt not in hex_dict:
         return "black"
     else:
         return hex_dict[nt]
 
+
 def cdp_plot_bokeh(file_prefix, nt_list, seq1, seq2, plot_type, browser, save_plot, pub):
     try:
         for nt in nt_list:
-            compare_plot_prepare("{0}_{1}.csv".format(file_prefix,nt), int(nt), browser, plot_type, pub, save_plot, seq1, seq2)
+            compare_plot_prepare("{0}_{1}.csv".format(file_prefix, nt), int(nt), browser, plot_type, pub, save_plot,
+                                 seq1, seq2)
     except:
         print("\nProblem loading alignment files.  Possibly a missing file for the sRNA lengths provided\n")
         sys.exit()
 
 
-
-
 def compare_plot_prepare(file_name, nt, browser, plot_type, pub, save_plot, seq1, seq2):
     file_path = file_name.rsplit('/', 1)[0]
     if browser:
-        output_file(file_path+'/{0}_{1}_{2}.html'.format(seq1,seq2,nt))
+        output_file(file_path + '/{0}_{1}_{2}.html'.format(seq1, seq2, nt))
     else:
         output_notebook(hide_banner=True)
     first_line = True
@@ -388,21 +392,22 @@ def compare_plot_prepare(file_name, nt, browser, plot_type, pub, save_plot, seq1
     # Interactive
 
     if plot_type == "log" or plot_type == "all":
-        compare_plot(file_path,header, log_max, nt, seq1, seq2, [], x_vals_point, [], y_vals_point, [], [], save_plot, pub)
+        compare_plot(file_path, header, log_max, nt, seq1, seq2, [], x_vals_point, [], y_vals_point, [], [], save_plot,
+                     pub)
     if plot_type == "log_error" or plot_type == "all":
-        compare_plot(file_path,header, log_max, nt, seq1, seq2, x_vals_line, x_vals_point, y_vals_line,
+        compare_plot(file_path, header, log_max, nt, seq1, seq2, x_vals_line, x_vals_point, y_vals_line,
                      y_vals_point, xerr, yerr, save_plot, pub)
 
 
 def compare_plot(file_path, header, log_max, nt, seq1, seq2, x_vals_line, x_vals_point, y_vals_line, y_vals_point,
-                xerr, yerr, save_plot, pub_plot):
+                 xerr, yerr, save_plot, pub_plot):
     # Std Error bars
     hover = HoverTool(
         tooltips=[
             ("(x,y)", "($x, $y)"),
             ("header", "@Desc")
         ],
-        names=["circle",]
+        names=["circle", ]
     )
     p = figure(plot_width=600, plot_height=600,
                x_axis_type="log", y_axis_type="log",
@@ -414,7 +419,7 @@ def compare_plot(file_path, header, log_max, nt, seq1, seq2, x_vals_line, x_vals
     p.circle('x', 'y', name="circle", source=source_point, size=3, color=_nt_colour(nt), legend="{0} nt".format(nt))
     p.legend.location = "top_left"
     p.line([0.1, log_max], [0.1, log_max])
-    if xerr !=[]:
+    if xerr != []:
         p.multi_line(xs=x_vals_line, ys=y_vals_line, color=_nt_colour(nt), alpha=0.5, )
     p.xaxis.axis_label = seq1
     p.yaxis.axis_label = seq2
@@ -422,14 +427,14 @@ def compare_plot(file_path, header, log_max, nt, seq1, seq2, x_vals_line, x_vals
     if save_plot:
 
         fig = plt.figure(figsize=(8, 8))
-        if xerr!=[]:
+        if xerr != []:
             plt.errorbar(x_vals_point, y_vals_point, xerr=xerr, yerr=yerr, capsize=0, ls='none', color=_nt_colour(nt),
                          elinewidth=0.5)
-        plt.grid(linestyle='-',alpha=0.2)
+        plt.grid(linestyle='-', alpha=0.2)
         plt.plot([0.1, log_max], [0.1, log_max], alpha=0.3)
         plt.scatter(x_vals_point, y_vals_point, color=_nt_colour(nt), s=3, label="{0} nt".format(nt))
-        plt.xlim([0.1,log_max])
-        plt.ylim([0.1,log_max])
+        plt.xlim([0.1, log_max])
+        plt.ylim([0.1, log_max])
         plt.xscale('log')
         plt.yscale('log')
         if pub_plot:
@@ -439,5 +444,5 @@ def compare_plot(file_path, header, log_max, nt, seq1, seq2, x_vals_line, x_vals
             plt.ylabel(seq2)
             plt.legend()
 
-        plt.savefig(file_path+'/{0}_{1}_{2}.png'.format(seq1,seq2,nt), dpi=300)
-        #plt.show()
+        plt.savefig(file_path + '/{0}_{1}_{2}.png'.format(seq1, seq2, nt), dpi=300)
+        # plt.show()

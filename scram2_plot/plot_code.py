@@ -87,7 +87,7 @@ def extract_header_alignment(header, alignments):
     return [sorted_fwd_alignment, sorted_rvs_alignment, aln_count], ref_len
 
 
-def fill_in_zeros_se(fwd_rvs_align_list, ref_len):
+def fill_in_zeros_se(fwd_rvs_align_list, ref_len,nt):
     """
     Generate alignment counts for every nucleotide in the reference
     :param fwd_rvs_align_list:  list of sorted forwards and reverse alignments
@@ -105,23 +105,17 @@ def fill_in_zeros_se(fwd_rvs_align_list, ref_len):
     revs_alignment_y_axis_lower = [0] * ref_len
 
     reference_x_axis = list(range(0, ref_len))
-    # Note alignment position for graphing is in the centre of the read (and not the 5' end)
     try:
         for i in sorted_fwd_alignment:
-            fwd_alignment_y_axis_upper[i[0]] = i[1] + i[2]
-            fwd_alignment_y_axis_lower[i[0]] = i[1] - i[2]
+            for j in range(nt):
+                fwd_alignment_y_axis_upper[i[0]+j-1] += (i[1] + i[2])
+                fwd_alignment_y_axis_lower[i[0]+j-1] += (i[1] - i[2])
         for i in sorted_rvs_alignment:
-            revs_alignment_y_axis_upper[i[0]] = i[1] + i[2]
-            revs_alignment_y_axis_lower[i[0]] = i[1] - i[2]
+            for j in range(nt):
+                revs_alignment_y_axis_upper[i[0]+j-1] += (i[1] + i[2])
+                revs_alignment_y_axis_lower[i[0]+j-1] += (i[1] - i[2])
     except:
         pass
-    # #Coverage per nucleotide instead - maybe use?
-    #     for i in sorted_fwd_alignment:
-    #         for j in range(nt):
-    #             fwd_alignment_y_axis[i[0]+j]+=i[1]
-    #     for i in sorted_rvs_alignment:
-    #         for j in range(nt):
-    #             revs_alignment_y_axis[i[0]-j]+=i[1]
 
     return reference_x_axis, fwd_alignment_y_axis_upper, fwd_alignment_y_axis_lower, \
            revs_alignment_y_axis_upper, revs_alignment_y_axis_lower
@@ -200,7 +194,7 @@ def multi_header_plot(nt_list, search_terms, in_files, cutoff, plot_y_lim, win, 
                 graph_processed_list = []
                 nt_pos = 0
                 for alignment in header_alignment_tuple:
-                    graph_processed_list.append(fill_in_zeros_se(alignment, max_ref_len))
+                    graph_processed_list.append(fill_in_zeros_se(alignment, max_ref_len,int(nt_list[nt_pos])))
                     nt_pos += 1
 
                 x_ref = graph_processed_list[0][0]
@@ -324,7 +318,7 @@ def _nt_colour(nt):
     :return: colour code (str)
     """
     hex_dict = {18: '#669999', 19: '#33cccc', 20: '#33cccc', 21: '#00CC00',
-                22: '#FF3399', 23: '#339933', 24: '#3333FF', 25: '#cccc00',
+                22: '#FF3399', 23: '#d8d408', 24: '#3333FF', 25: '#cccc00',
                 26: '#660033', 27: '#996600', 28: '#336699', 29: '#ff6600',
                 30: '#ff99ff', 31: '#669900', 32: '#993333'}
 

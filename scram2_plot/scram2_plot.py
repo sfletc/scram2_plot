@@ -8,7 +8,7 @@ from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 
 __all__ = []
-__version__ = 0.65
+__version__ = 0.66
 __date__ = '2016-02-08'
 __updated__ = '2016-03-08'
 
@@ -32,7 +32,9 @@ def main(argv=None):
         parser_profile.add_argument('-cutoff','--cutoff', type = int, default=1,
                             help = "Min. alignment RPMR from the most abundant profile (if multi) to generate plot")
 
-        parser_profile.add_argument('-s','--search', type=str, help="Full header or substring of header", nargs='*')
+        parser_profile.add_argument('-s','--search', type=str, help="Full header or substring of header.  Without "
+                                                                    "flag, all headers will be plotted", nargs='*',
+        default="")
 
         parser_profile.add_argument('-l','--length', type=str,help="Comma-separated list of sRNA lengths to plot.  "
                                                                 "SCRAM2 alignment files must be available for each "

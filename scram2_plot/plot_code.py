@@ -33,7 +33,67 @@ class DNA(object):
         return self.sequence == other.sequence
 
 
-def import_scram2_den(in_file):
+def multi_header_plot(nt_list, search_terms, in_files, cutoff, plot_y_lim, win, pub, save_plot):
+    """
+    21,22,24nt profile plot
+    :param nt_list: 
+    :param search_terms: header search terms list
+    :param in_files: alignment files prefix
+    :param cutoff: highest count of the most abundant alignment of 21,22,24 nt profiles
+    :param plot_y_lim: set y limits on plot 
+    :param win: smoothing window size
+    :param pub: remove box and axis labels
+    """
+    select_win = False
+    alignment_file_list = load_indv_files(in_files, nt_list)
+    substring = " ".join(search_terms)
+    all_keys = get_all_headers(alignment_file_list)
+    for header in all_keys:
+        if substring.lower() in header.lower():
+            nt_pos = 0
+            header_alignment_tuple = ()
+            ref_len_tuple = ()
+            for alignment_file in alignment_file_list:
+                header_alignment_tuple, ref_len_tuple = get_selected_alignments(alignment_file, header,
+                                                                                header_alignment_tuple,
+                                                                                ref_len_tuple,nt_list[nt_pos])
+                nt_pos+=1
+            above_cutoff = False
+            for alignment in header_alignment_tuple:
+                if alignment[2] >= cutoff:
+                    above_cutoff = True
+            if above_cutoff:
+                if header[0] == '"':
+                    plot_name = save_file_name(in_files, header[1:-2])
+                else:
+                    plot_name = save_file_name(in_files, header)
+
+                print("Plotting:\n")
+                print(header)
+                max_ref_len = max(ref_len_tuple)
+
+                win, select_win = select_win_size(max_ref_len, select_win, win)
+                graph_processed_list = process_for_plot(header_alignment_tuple, max_ref_len, nt_list)
+
+                generate_plot_data(graph_processed_list, header, nt_list, plot_name, plot_y_lim, pub, save_plot, win)
+
+
+def load_indv_files(in_files, nt_list):
+    print("\nLoading scram2 alignment files:\n")
+    try:
+        alignment_file_list = []
+        for nt in nt_list:
+            file_name = in_files + "_" + nt + ".csv"
+            print("{0} \n".format(file_name))
+            in_file, _ = import_scram2_profile(file_name)
+            alignment_file_list.append(in_file)
+    except:
+        print("\nProblem loading alignment files.  Possibly a missing file for the sRNA lengths provided\n")
+        sys.exit()
+    return alignment_file_list
+
+
+def import_scram2_profile(in_file):
     """
     Import a SCRAM2 csv file to a dictionary
     :param in_file: path/to/profile string
@@ -58,34 +118,62 @@ def import_scram2_den(in_file):
     return alignments, srna_len
 
 
-def extract_header_alignment(header, alignments):
+def get_all_headers(alignment_file_list):
+    print("Extracting headers:\n")
+    all_keys = set()
+    for nt in alignment_file_list:
+        for header in nt.keys():
+            all_keys.add(header)
+    return all_keys
+
+
+def get_selected_alignments(alignment_file, header, header_alignment_tuple, ref_len_tuple,nt):
+    alignment, ref_len = extract_header_alignment(header, alignment_file,nt)
+    header_alignment_tuple = header_alignment_tuple + (alignment,)
+    ref_len_tuple = ref_len_tuple + (ref_len,)
+    return header_alignment_tuple, ref_len_tuple
+
+
+def extract_header_alignment(header, alignments,nt):
     """
     With a provided complete header, extract the alignment and process to correct format for fill in zeros
     :param header: reference sequence header string 
     :param alignments: alignments dictionary
     :return: sorted_fwd_alignment, sorted_rvs_alignment, aln_count list
     """
-    try:
+    sorted_fwd_alignment = []
+    sorted_rvs_alignment = []
+    aln_count = 0.0
+    ref_len = 0
+
+    if header not in alignments:
+        print("{0} absent in {1} nt alignment file\n".format(header,nt))
+    else:
         extracted_alignments = alignments[header]
-        sorted_fwd_alignment = []
-        sorted_rvs_alignment = []
-        aln_count = 0.0
-        ref_len = 0
         for alignment in extracted_alignments:
             ref_len = alignment[0]
             if alignment[3] =="+":
                 sorted_fwd_alignment.append((alignment[2], alignment[4], alignment[5]))
-                ##aln_count += alignment[3]
             elif alignment[3] =="-":
                 sorted_rvs_alignment.append((alignment[2], -alignment[4], alignment[5]))
             aln_count += alignment[4]
-    except:
-        sorted_fwd_alignment = []
-        sorted_rvs_alignment = []
-        aln_count = 0.0
-        ref_len = 0
     return [sorted_fwd_alignment, sorted_rvs_alignment, aln_count], ref_len
 
+
+def select_win_size(max_ref_len, select_win, win):
+    if win == 0 or select_win:
+        win = int(max_ref_len / 30)
+        select_win = True
+    if win % 2 != 0 or win == 0: win += 1
+    return win, select_win
+
+def process_for_plot(header_alignment_tuple, max_ref_len, nt_list):
+    graph_processed_list = []
+    nt_pos = 0
+    for alignment in header_alignment_tuple:
+        graph_processed_list.append(fill_in_zeros_se(alignment, max_ref_len, int(nt_list[nt_pos])))
+        nt_pos += 1
+    return graph_processed_list
 
 def fill_in_zeros_se(fwd_rvs_align_list, ref_len,nt):
     """
@@ -120,6 +208,17 @@ def fill_in_zeros_se(fwd_rvs_align_list, ref_len,nt):
     return reference_x_axis, fwd_alignment_y_axis_upper, fwd_alignment_y_axis_lower, \
            revs_alignment_y_axis_upper, revs_alignment_y_axis_lower
 
+def generate_plot_data(graph_processed_list, header, nt_list, plot_name, plot_y_lim, pub, save_plot, win):
+    x_ref = graph_processed_list[0][0]
+    smoothed_for_plot_tuple = ()
+    for graph_processed in graph_processed_list:
+        y_fwd_smoothed_upper, y_fwd_smoothed_lower, y_rvs_smoothed_upper, \
+        y_rvs_smoothed_lower = _smoothed_for_plot_se(graph_processed, win)
+        smoothed_for_plot_tuple = smoothed_for_plot_tuple + ((y_fwd_smoothed_upper, y_fwd_smoothed_lower,
+                                                              y_rvs_smoothed_upper, y_rvs_smoothed_lower),)
+    profile_plot(nt_list, x_ref, smoothed_for_plot_tuple, header, plot_y_lim, pub, save_plot, plot_name)
+
+
 
 def _smoothed_for_plot_se(graph_processed, smooth_win_size):
     """
@@ -138,74 +237,6 @@ def _smoothed_for_plot_se(graph_processed, smooth_win_size):
                                   smooth_win_size, window='blackman')
     return y_fwd_smoothed_upper, y_fwd_smoothed_lower, y_rvs_smoothed_upper, y_rvs_smoothed_lower
 
-
-def multi_header_plot(nt_list, search_terms, in_files, cutoff, plot_y_lim, win, pub, save_plot):
-    """
-    21,22,24nt profile plot
-    :param nt_list: 
-    :param search_terms: header search terms list
-    :param in_files: alignment files prefix
-    :param cutoff: highest count of the most abundant alignment of 21,22,24 nt profiles
-    :param plot_y_lim: set y limits on plot 
-    :param win: smoothing window size
-    :param pub: remove box and axis labels
-    """
-    select_win = False
-    try:
-        alignment_file_list = []
-        for nt in nt_list:
-            file_name = in_files + "_" + nt + ".csv"
-            print("Loading {0} \n".format(file_name))
-            in_file, _ = import_scram2_den(file_name)
-            alignment_file_list.append(in_file)
-    except:
-        print("\nProblem loading alignment files.  Possibly a missing file for the sRNA lengths provided\n")
-        sys.exit()
-    substring = " ".join(search_terms)
-
-    print("Extracting headers\n")
-    all_keys = set()
-    for nt in alignment_file_list:
-        for header in nt.keys():
-            all_keys.add(header)
-    for header in all_keys:
-        if substring.lower() in header.lower():
-            header_alignment_tuple = ()
-            ref_len_tuple = ()
-            for alignment_file in alignment_file_list:
-                alignment, ref_len = extract_header_alignment(header, alignment_file)
-                header_alignment_tuple = header_alignment_tuple + (alignment,)
-                ref_len_tuple = ref_len_tuple + (ref_len,)
-            above_cutoff = False
-            for alignment in header_alignment_tuple:
-                if alignment[2] >= cutoff:
-                    above_cutoff = True
-            if above_cutoff:
-                if header[0] == '"':
-                    plot_name = save_file_name(in_files, header[1:-2])
-                else:
-                    plot_name = save_file_name(in_files, header)
-                print(header)
-                max_ref_len = max(ref_len_tuple)
-                if win == 0 or select_win:
-                    win = int(max_ref_len / 30)
-                    select_win = True
-                if win % 2 != 0 or win == 0: win += 1
-                graph_processed_list = []
-                nt_pos = 0
-                for alignment in header_alignment_tuple:
-                    graph_processed_list.append(fill_in_zeros_se(alignment, max_ref_len,int(nt_list[nt_pos])))
-                    nt_pos += 1
-
-                x_ref = graph_processed_list[0][0]
-                smoothed_for_plot_tuple = ()
-                for graph_processed in graph_processed_list:
-                    y_fwd_smoothed_upper, y_fwd_smoothed_lower, y_rvs_smoothed_upper, \
-                    y_rvs_smoothed_lower = _smoothed_for_plot_se(graph_processed, win)
-                    smoothed_for_plot_tuple = smoothed_for_plot_tuple + ((y_fwd_smoothed_upper, y_fwd_smoothed_lower,
-                                                                          y_rvs_smoothed_upper, y_rvs_smoothed_lower),)
-
-                den_multi_plot(nt_list, x_ref, smoothed_for_plot_tuple, header, plot_y_lim, pub, save_plot, plot_name)
 
 
 def smooth(x, window_len, window='hamming'):
@@ -239,7 +270,7 @@ def smooth(x, window_len, window='hamming'):
     return y[int(window_len / 2 - 1):-int(window_len / 2)]
 
 
-def den_multi_plot(nt_list, x_ref, smoothed_for_plot_tuple, header, plot_y_lim, pub, save_plot, plot_name):
+def profile_plot(nt_list, x_ref, smoothed_for_plot_tuple, header, plot_y_lim, pub, save_plot, plot_name):
     fig = plt.figure(figsize=(10, 5))
     nt_pos = 0
     for smoothed_for_plot in smoothed_for_plot_tuple:

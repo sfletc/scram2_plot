@@ -63,7 +63,7 @@ def main(argv=None):
         parser_cdp.add_argument('-a', '--alignment',
                             type=str, help="sRNA alignment file prefix used by SCRAM2 profile (i.e. exclude _21.csv, _22.csv, "
                                            "_24.csv)")
-        parser_cdp.add_argument('-l','--length', type=str,help="Comma-seperated list of sRNA lengths to plot.  "
+        parser_cdp.add_argument('-l','--length', type=str,help="Comma-separated list of sRNA lengths to plot.  "
                                                                 "SCRAM2 alignment files must be available for each "
                                                                 "sRNA "
                                                                 "length")

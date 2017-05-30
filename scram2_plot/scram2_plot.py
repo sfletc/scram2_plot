@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-import plot_code as pc
+import profile_plot as pp
+import compare_plot as cp
 
 
 
@@ -8,9 +9,9 @@ from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 
 __all__ = []
-__version__ = 0.66
-__date__ = '2016-02-08'
-__updated__ = '2016-03-08'
+__version__ = 0.67
+__date__ = '2017-05-30'
+__updated__ = '2017-05-30'
 
 
 def main(argv=None):
@@ -93,7 +94,7 @@ def main(argv=None):
             win = args.win
             nt_list=args.length.split(',')
             save_plot=args.png
-            pc.multi_header_plot(nt_list,search_term, alignment_prefix, cutoff, ylim, win, pub, save_plot)
+            pp.multi_header_plot(nt_list,search_term, alignment_prefix, cutoff, ylim, win, pub, save_plot)
 
         if args.command == "compare":
             alignment_prefix = args.alignment
@@ -104,7 +105,7 @@ def main(argv=None):
             browser=args.html
             save_plot=args.png
             pub = args.publish
-            pc.cdp_plot_bokeh(alignment_prefix, nt_list, xlab, ylab, plot_type, browser, save_plot, pub)
+            cp.cdp_plot_bokeh(alignment_prefix, nt_list, xlab, ylab, plot_type, browser, save_plot, pub)
 
     except KeyboardInterrupt:
         ### handle keyboard interrupt ###

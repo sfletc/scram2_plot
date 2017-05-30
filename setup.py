@@ -26,6 +26,7 @@ setup(name='scram2_plot',
     'Programming Language :: Python :: 3.5'],
       install_requires=['numpy','matplotlib','bokeh'],
       scripts=['scram2_plot/scram2_plot.py',
-      'scram2_plot/plot_code.py',
+      'scram2_plot/profile_plot.py',
+      'scram2_plot/compare_plot.py'
       ],
       zip_safe=False)

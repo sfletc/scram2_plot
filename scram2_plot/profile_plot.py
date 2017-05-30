@@ -209,7 +209,7 @@ def generate_plot_data(graph_processed_list, header, nt_list, plot_name, plot_y_
         y_rvs_smoothed_lower = _smoothed_for_plot_se(graph_processed, win)
         smoothed_for_plot_tuple = smoothed_for_plot_tuple + ((y_fwd_smoothed_upper, y_fwd_smoothed_lower,
                                                               y_rvs_smoothed_upper, y_rvs_smoothed_lower),)
-    profile_plot(nt_list, x_ref, smoothed_for_plot_tuple, header, plot_y_lim, pub, save_plot, plot_name)
+    profile_plot(nt_list, x_ref, smoothed_for_plot_tuple, header, plot_y_lim, pub, save_plot, plot_name, win)
 
 
 
@@ -263,7 +263,7 @@ def smooth(x, window_len, window='hamming'):
     return y[int(window_len / 2 - 1):-int(window_len / 2)]
 
 
-def profile_plot(nt_list, x_ref, smoothed_for_plot_tuple, header, plot_y_lim, pub, save_plot, plot_name):
+def profile_plot(nt_list, x_ref, smoothed_for_plot_tuple, header, plot_y_lim, pub, save_plot, plot_name, win):
     fig = plt.figure(figsize=(10, 5))
     nt_pos = 0
     for smoothed_for_plot in smoothed_for_plot_tuple:
@@ -283,7 +283,7 @@ def profile_plot(nt_list, x_ref, smoothed_for_plot_tuple, header, plot_y_lim, pu
         _pub_plot()
     else:
         xlabel(header)
-        ylabel('Reads per million reads')
+        ylabel('Coverage (smoothed RPMR; win = {})'.format(win))
         plt.legend(loc='best', fancybox=True, framealpha=0.5)
     if plot_y_lim != 0:
         ylim(-plot_y_lim, plot_y_lim)

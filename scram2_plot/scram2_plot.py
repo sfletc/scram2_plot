@@ -56,6 +56,9 @@ def main(argv=None):
                             default=False,
                             help='Export plot/s as 300 dpi .png file/s')
 
+        parser_profile.add_argument('-bin_reads', '--bin_reads', action='store_true',
+                            default=False,
+                            help='For plotting large profiles (i.e. chromosomes).  Assigns reads 10,000 bins prior to smoothing. X-axis shows bin, not reference position')
 
         #Compare plot
         parser_cdp = subparsers.add_parser("compare", help = "Generates a scatter plot for a SCRAM2 cpd alignment")
@@ -94,7 +97,8 @@ def main(argv=None):
             win = args.win
             nt_list=args.length.split(',')
             save_plot=args.png
-            pp.multi_header_plot(nt_list,search_term, alignment_prefix, cutoff, ylim, win, pub, save_plot)
+            bin_reads=args.bin_reads
+            pp.profile_plot(nt_list, search_term, alignment_prefix, cutoff, ylim, win, pub, save_plot, bin_reads)
 
         if args.command == "compare":
             alignment_prefix = args.alignment
@@ -105,7 +109,7 @@ def main(argv=None):
             browser=args.html
             save_plot=args.png
             pub = args.publish
-            cp.cdp_plot_bokeh(alignment_prefix, nt_list, xlab, ylab, plot_type, browser, save_plot, pub)
+            cp.compare_plot(alignment_prefix, nt_list, xlab, ylab, plot_type, browser, save_plot, pub)
 
     except KeyboardInterrupt:
         ### handle keyboard interrupt ###

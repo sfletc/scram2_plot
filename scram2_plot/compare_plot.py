@@ -7,17 +7,25 @@ from collections import OrderedDict
 import csv
 import profile_plot as pp
 import math
-def cdp_plot_bokeh(file_prefix, nt_list, seq1, seq2, plot_type, browser, save_plot, pub):
+import os.path
+
+def compare_plot(file_prefix, nt_list, seq1, seq2, plot_type, browser, save_plot, pub):
     #try:
     for nt in nt_list:
-        compare_plot_prepare("{0}_{1}.csv".format(file_prefix, nt), int(nt), browser, plot_type, pub, save_plot,
-                             seq1, seq2)
-    # except:
-    #     print("\nProblem loading alignment files.  Possibly a missing file for the sRNA lengths provided\n")
-    #     sys.exit()
+        fname = "{0}_{1}.csv".format(file_prefix, nt)
+        if os.path.isfile(fname):
+            try:
+                format_compare_data(fname, int(nt), browser, plot_type, pub, save_plot,
+                                seq1, seq2)
+            except:
+                print("\nCannot load and process {}".format(fname))
+                sys.exit()
+        else:
+            print("\n{} does not exist at this location".format(fname))
+            sys.exit()
 
 
-def compare_plot_prepare(file_name, nt, browser, plot_type, pub, save_plot, seq1, seq2):
+def format_compare_data(file_name, nt, browser, plot_type, pub, save_plot, seq1, seq2):
     file_path = file_name.rsplit('/', 1)[0]
     if browser:
         output_file(file_path + '/{0}_{1}_{2}.html'.format(seq1, seq2, nt))
@@ -69,15 +77,15 @@ def compare_plot_prepare(file_name, nt, browser, plot_type, pub, save_plot, seq1
             header[plot_point]=header[plot_point][:40]
 
     if plot_type == "log" or plot_type == "all":
-        compare_plot(file_path, header, log_max, nt, seq1, seq2, [], x_vals_point, [], y_vals_point, [], [], save_plot,
-                     pub)
+        plot_compare_plot(file_path, header, log_max, nt, seq1, seq2, [], x_vals_point, [], y_vals_point, [], [], save_plot,
+                          pub)
     if plot_type == "log_error" or plot_type == "all":
-        compare_plot(file_path, header, log_max, nt, seq1, seq2, x_vals_line, x_vals_point, y_vals_line,
-                     y_vals_point, xerr, yerr, save_plot, pub)
+        plot_compare_plot(file_path, header, log_max, nt, seq1, seq2, x_vals_line, x_vals_point, y_vals_line,
+                          y_vals_point, xerr, yerr, save_plot, pub)
 
 
-def compare_plot(file_path, header, log_max, nt, seq1, seq2, x_vals_line, x_vals_point, y_vals_line, y_vals_point,
-                 xerr, yerr, save_plot, pub_plot):
+def plot_compare_plot(file_path, header, log_max, nt, seq1, seq2, x_vals_line, x_vals_point, y_vals_line, y_vals_point,
+                      xerr, yerr, save_plot, pub_plot):
     # Std Error bars
     hover = HoverTool(
         tooltips=[

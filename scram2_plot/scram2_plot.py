@@ -58,7 +58,8 @@ def main(argv=None):
 
         parser_profile.add_argument('-bin_reads', '--bin_reads', action='store_true',
                             default=False,
-                            help='For plotting large profiles (i.e. chromosomes).  Assigns reads 10,000 bins prior to smoothing. X-axis shows bin, not reference position')
+                            help='For plotting large profiles (i.e. chromosomes).  Assigns reads to 10,000 bins prior '
+                                 'to smoothing. X-axis shows bin, not reference position')
 
         #Compare plot
         parser_cdp = subparsers.add_parser("compare", help = "Generates a scatter plot for a SCRAM2 cpd alignment")

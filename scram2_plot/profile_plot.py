@@ -91,6 +91,12 @@ def profile_plot(nt_list, search_terms, in_files, cutoff, plot_y_lim, win, pub, 
 
 
 def load_indv_files(in_files, nt_list):
+    """
+    Load individual sequence files
+    :param in_files:
+    :param nt_list:
+    :return:
+    """
     print("\nLoading scram2 alignment files:\n")
 
     alignment_file_list = []
@@ -137,6 +143,11 @@ def import_scram2_profile(in_file):
 
 
 def get_all_headers(alignment_file_list):
+    """
+    Get headers
+    :param alignment_file_list:
+    :return:
+    """
     print("Extracting headers:\n")
     all_keys = set()
     for nt in alignment_file_list:
@@ -146,6 +157,15 @@ def get_all_headers(alignment_file_list):
 
 
 def get_selected_alignments(alignment_file, header, header_alignment_tuple, ref_len_tuple,nt):
+    """
+    Get selected alignments
+    :param alignment_file:
+    :param header:
+    :param header_alignment_tuple:
+    :param ref_len_tuple:
+    :param nt:
+    :return:
+    """
     alignment, ref_len = extract_header_alignment(header, alignment_file,nt)
     header_alignment_tuple = header_alignment_tuple + (alignment,)
     ref_len_tuple = ref_len_tuple + (ref_len,)
@@ -177,6 +197,13 @@ def extract_header_alignment(header, alignments,nt):
 
 
 def select_win_size(max_ref_len, select_win, win):
+    """
+    Set smoothing window size
+    :param max_ref_len:
+    :param select_win:
+    :param win:
+    :return:
+    """
     if win == 0 or select_win:
         win = int(max_ref_len / 30)
         select_win = True
@@ -241,7 +268,12 @@ def bin_aligned_reads(fwd_rvs_align_list, ref_len, nt):
 
 
 def smooth_all_plot_data(graph_processed_list, win):
-    x_ref = graph_processed_list[0][0]
+    """
+    Smooth all plot data
+    :param graph_processed_list:
+    :param win:
+    :return:
+    """
     smoothed_for_plot_list = []
     for graph_processed in graph_processed_list:
         single_nt_size_tuple=()
@@ -284,6 +316,19 @@ def smooth(x, window_len, window='hamming'):
 
 
 def plot_profile_plot(nt_list, x_ref, smoothed_for_plot_tuple, header, plot_y_lim, pub, save_plot, plot_name, win):
+    """
+    Plot profile plot
+    :param nt_list:
+    :param x_ref:
+    :param smoothed_for_plot_tuple:
+    :param header:
+    :param plot_y_lim:
+    :param pub:
+    :param save_plot:
+    :param plot_name:
+    :param win:
+    :return:
+    """
     fig = plt.figure(figsize=(10, 5))
     nt_pos = 0
     for smoothed_for_plot in smoothed_for_plot_tuple:
@@ -331,6 +376,12 @@ def _pub_plot():
 
 
 def save_file_name(in_files, header):
+    """
+    Construct save file name
+    :param in_files:
+    :param header:
+    :return:
+    """
     out_file_name = in_files + "_"
     for i in header:
         if len(out_file_name) > 100:

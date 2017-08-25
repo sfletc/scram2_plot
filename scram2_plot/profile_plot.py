@@ -363,6 +363,7 @@ def _pub_plot():
     """
     plt.tick_params(
         axis='both',  # changes apply to the x-axis
+        direction='in',
         which='both',  # both major and minor ticks are affected
         bottom='on',  # ticks along the bottom edge are off
         top='on',
@@ -415,7 +416,7 @@ def _nt_colour(nt):
     hex_dict = {18: '#669999', 19: '#33cccc', 20: '#33cccc', 21: '#00CC00',
                 22: '#FF3399', 23: '#d8d408', 24: '#3333FF', 25: '#cccc00',
                 26: '#660033', 27: '#996600', 28: '#336699', 29: '#ff6600',
-                30: '#ff99ff', 31: '#669900', 32: '#993333'}
+                30: '#ff99ff', 31: '#669900', 32: '#993333', "mir": '#ff7b00'}
 
     if nt not in hex_dict:
         return "black"

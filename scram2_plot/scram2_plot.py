@@ -84,6 +84,10 @@ def main(argv=None):
         parser_cdp.add_argument('-png', '--png', action='store_true',
                             default=False,
                             help='Export plot/s as 300 dpi .png file/s')
+        parser_cdp.add_argument('-xylim', '--xylim',
+                            type=str, help="x and y max. axis limits", default = "auto")
+        parser_cdp.add_argument('-fig_size', '--fig_size',
+                            type=int, help="Output plot dimensions", default = 8)
 
 
         # Process arguments
@@ -110,7 +114,9 @@ def main(argv=None):
             browser=args.html
             save_plot=args.png
             pub = args.publish
-            cp.compare_plot(alignment_prefix, nt_list, xlab, ylab, plot_type, browser, save_plot, pub)
+            fig_size=args.fig_size
+            xylim=args.xylim
+            cp.compare_plot(alignment_prefix, nt_list, xlab, ylab, plot_type, browser, save_plot, pub, fig_size, xylim)
 
     except KeyboardInterrupt:
         ### handle keyboard interrupt ###

@@ -9,14 +9,14 @@ import profile_plot as pp
 import math
 import os.path
 
-def compare_plot(file_prefix, nt_list, seq1, seq2, plot_type, browser, save_plot, pub):
+def compare_plot(file_prefix, nt_list, seq1, seq2, plot_type, browser, save_plot, pub, fig_size, xylim):
     #try:
-    for nt in nt_list:
-        fname = "{0}_{1}.csv".format(file_prefix, nt)
+    if nt_list[0]=="mir":
+        fname = file_prefix + "_mir.csv"
         if os.path.isfile(fname):
             try:
-                format_compare_data(fname, int(nt), browser, plot_type, pub, save_plot,
-                                seq1, seq2)
+                format_compare_data(fname, "mir", browser, plot_type, pub, save_plot,
+                                    seq1, seq2, fig_size, xylim)
             except:
                 print("\nCannot load and process {}".format(fname))
                 sys.exit()
@@ -24,8 +24,22 @@ def compare_plot(file_prefix, nt_list, seq1, seq2, plot_type, browser, save_plot
             print("\n{} does not exist at this location".format(fname))
             sys.exit()
 
+    else:
+        for nt in nt_list:
+            fname = "{0}_{1}.csv".format(file_prefix, nt)
+            if os.path.isfile(fname):
+                try:
+                    format_compare_data(fname, int(nt), browser, plot_type, pub, save_plot,
+                                    seq1, seq2, fig_size, xylim)
+                except:
+                    print("\nCannot load and process {}".format(fname))
+                    sys.exit()
+            else:
+                print("\n{} does not exist at this location".format(fname))
+                sys.exit()
 
-def format_compare_data(file_name, nt, browser, plot_type, pub, save_plot, seq1, seq2):
+
+def format_compare_data(file_name, nt, browser, plot_type, pub, save_plot, seq1, seq2, fig_size, xylim):
     file_path = file_name.rsplit('/', 1)[0]
     if browser:
         output_file(file_path + '/{0}_{1}_{2}.html'.format(seq1, seq2, nt))
@@ -67,8 +81,11 @@ def format_compare_data(file_name, nt, browser, plot_type, pub, save_plot, seq1,
                 y_vals_point.append(float(line[-2]))
 
                 header.append(line[0])
-    _max = max([max_x, max_y])  # sets up max x and y scale values
-    log_max = _max + _max / 2
+    if xylim =="auto":
+        _max = max([max_x, max_y])  # sets up max x and y scale values
+        log_max = _max + _max / 2
+    else:
+        log_max=int(xylim)
     csvfile.close()
     # Interactive
     #Hack as bokeh tooltip text wrapping for large x values not working properly
@@ -78,14 +95,14 @@ def format_compare_data(file_name, nt, browser, plot_type, pub, save_plot, seq1,
 
     if plot_type == "log" or plot_type == "all":
         plot_compare_plot(file_path, header, log_max, nt, seq1, seq2, [], x_vals_point, [], y_vals_point, [], [], save_plot,
-                          pub)
+                          pub, fig_size)
     if plot_type == "log_error" or plot_type == "all":
         plot_compare_plot(file_path, header, log_max, nt, seq1, seq2, x_vals_line, x_vals_point, y_vals_line,
-                          y_vals_point, xerr, yerr, save_plot, pub)
+                          y_vals_point, xerr, yerr, save_plot, pub, fig_size)
 
 
 def plot_compare_plot(file_path, header, log_max, nt, seq1, seq2, x_vals_line, x_vals_point, y_vals_line, y_vals_point,
-                      xerr, yerr, save_plot, pub_plot):
+                      xerr, yerr, save_plot, pub_plot, fig_size = 4):
     # Std Error bars
     hover = HoverTool(
         tooltips=[
@@ -101,7 +118,13 @@ def plot_compare_plot(file_path, header, log_max, nt, seq1, seq2, x_vals_line, x
     source_point = ColumnDataSource(data=OrderedDict(x=x_vals_point,
                                                      y=y_vals_point, Desc=header, )
                                     )
-    p.circle('x', 'y', name="circle", source=source_point, size=3, color=pp._nt_colour(nt), legend="{0} nt".format(nt))
+    if nt == "mir":
+        p.circle('x', 'y', name="circle", source=source_point, size=3, color=pp._nt_colour(nt),
+                 legend="microRNA".format(
+            nt))
+    else:
+        p.circle('x', 'y', name="circle", source=source_point, size=3, color=pp._nt_colour(nt), legend="{0} nt".format(
+        nt))
     p.legend.location = "top_left"
     p.line([0.1, log_max], [0.1, log_max])
     if xerr != []:
@@ -111,13 +134,13 @@ def plot_compare_plot(file_path, header, log_max, nt, seq1, seq2, x_vals_line, x
     show(p)
     if save_plot:
 
-        fig = plt.figure(figsize=(8, 8))
+        fig = plt.figure(figsize=(fig_size, fig_size))
         if xerr != []:
             plt.errorbar(x_vals_point, y_vals_point, xerr=xerr, yerr=yerr, capsize=0, ls='none', color=pp._nt_colour(
                 nt),
                          elinewidth=0.5)
-        plt.grid(linestyle='-', alpha=0.2)
-        plt.plot([0.1, log_max], [0.1, log_max], alpha=0.3)
+
+        plt.plot([0.1, log_max], [0.1, log_max], alpha=0.9, linewidth=1)
         plt.scatter(x_vals_point, y_vals_point, color=pp._nt_colour(nt), s=3, label="{0} nt".format(nt))
         plt.xlim([0.1, log_max])
         plt.ylim([0.1, log_max])
@@ -125,7 +148,9 @@ def plot_compare_plot(file_path, header, log_max, nt, seq1, seq2, x_vals_line, x
         plt.yscale('log')
         if pub_plot:
             pp._pub_plot()
+            plt.minorticks_off()
         else:
+            plt.grid(linestyle='-', alpha=0.2)
             plt.xlabel(seq1)
             plt.ylabel(seq2)
             plt.legend()

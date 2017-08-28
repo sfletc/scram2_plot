@@ -70,8 +70,8 @@ def main(argv=None):
                                            "_24.csv)")
         parser_cdp.add_argument('-l','--length', type=str,help="Comma-separated list of sRNA lengths to plot.  "
                                                                 "SCRAM2 alignment files must be available for each "
-                                                                "sRNA "
-                                                                "length")
+                                                                "sRNA length. For an miRNA alignment file, "
+                                                               "use 'mir' instead of an integer")
         parser_cdp.add_argument('-xlab', '--x_label', default=["Treatment 1"],
                                 help='x label - corresponds to -s1 treatment in SCRAM2 arguments', nargs='*')
         parser_cdp.add_argument('-ylab', '--y_label', default=["Treatment 2"],

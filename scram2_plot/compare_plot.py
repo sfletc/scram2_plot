@@ -12,7 +12,7 @@ import os.path
 def compare_plot(file_prefix, nt_list, seq1, seq2, plot_type, browser, save_plot, pub, fig_size, xylim):
     #try:
     if nt_list[0]=="mir":
-        fname = file_prefix + "_mir.csv"
+        fname = file_prefix + "_miR.csv"
         if os.path.isfile(fname):
             try:
                 format_compare_data(fname, "mir", browser, plot_type, pub, save_plot,
@@ -28,19 +28,23 @@ def compare_plot(file_prefix, nt_list, seq1, seq2, plot_type, browser, save_plot
         for nt in nt_list:
             fname = "{0}_{1}.csv".format(file_prefix, nt)
             if os.path.isfile(fname):
-                try:
-                    format_compare_data(fname, int(nt), browser, plot_type, pub, save_plot,
-                                    seq1, seq2, fig_size, xylim)
-                except:
-                    print("\nCannot load and process {}".format(fname))
-                    sys.exit()
+                # try:
+                format_compare_data(fname, int(nt), browser, plot_type, pub, save_plot,
+                                seq1, seq2, fig_size, xylim)
+                # except:
+                #     print("\nCannot load and process {}".format(fname))
+                #     sys.exit()
             else:
                 print("\n{} does not exist at this location".format(fname))
                 sys.exit()
 
 
 def format_compare_data(file_name, nt, browser, plot_type, pub, save_plot, seq1, seq2, fig_size, xylim):
-    file_path = file_name.rsplit('/', 1)[0]
+    if "/" in file_name:
+        file_path = file_name.rsplit('/', 1)[0]
+    else:
+        file_path="."
+
     if browser:
         output_file(file_path + '/{0}_{1}_{2}.html'.format(seq1, seq2, nt))
     else:

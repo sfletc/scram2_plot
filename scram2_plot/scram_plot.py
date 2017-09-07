@@ -28,7 +28,7 @@ def main(argv=None):
 
         #profile plot
         parser_profile.add_argument('-a', '--alignment',
-                            type=str, help="sRNA alignment file prefix used by SCRAM2 profile (i.e. exclude _21.csv, _22.csv, "
+                            type=str, help="sRNA alignment file prefix used by SCRAM profile (i.e. exclude _21.csv, _22.csv, "
                                            "_24.csv)")
         parser_profile.add_argument('-cutoff','--cutoff', type = int, default=1,
                             help = "Min. alignment RPMR from the most abundant profile (if multi) to generate plot")
@@ -38,7 +38,7 @@ def main(argv=None):
         default="")
 
         parser_profile.add_argument('-l','--length', type=str,help="Comma-separated list of sRNA lengths to plot.  "
-                                                                "SCRAM2 alignment files must be available for each "
+                                                                "SCRAM alignment files must be available for each "
                                                                 "sRNA "
                                                                 "length")
 
@@ -62,20 +62,20 @@ def main(argv=None):
                                  'to smoothing. X-axis shows bin, not reference position')
 
         #Compare plot
-        parser_cdp = subparsers.add_parser("compare", help = "Generates a scatter plot for a SCRAM2 cpd alignment")
+        parser_cdp = subparsers.add_parser("compare", help = "Generates a scatter plot for a SCRAM cpd alignment")
         parser_cdp.add_argument('-plot_type', '--plot_type', default="log_error",
                                     help='Bokeh plot type to display (log, log_error or all)')
         parser_cdp.add_argument('-a', '--alignment',
-                            type=str, help="sRNA alignment file prefix used by SCRAM2 profile (i.e. exclude _21.csv, _22.csv, "
+                            type=str, help="sRNA alignment file prefix used by SCRAM profile (i.e. exclude _21.csv, _22.csv, "
                                            "_24.csv)")
         parser_cdp.add_argument('-l','--length', type=str,help="Comma-separated list of sRNA lengths to plot.  "
-                                                                "SCRAM2 alignment files must be available for each "
+                                                                "SCRAM alignment files must be available for each "
                                                                 "sRNA length. For an miRNA alignment file, "
                                                                "use 'mir' instead of an integer")
         parser_cdp.add_argument('-xlab', '--x_label', default=["Treatment 1"],
-                                help='x label - corresponds to -s1 treatment in SCRAM2 arguments', nargs='*')
+                                help='x label - corresponds to -s1 treatment in SCRAM arguments', nargs='*')
         parser_cdp.add_argument('-ylab', '--y_label', default=["Treatment 2"],
-                                help='y label - corresponds to -s2 treatment in SCRAM2 arguments', nargs='*')
+                                help='y label - corresponds to -s2 treatment in SCRAM arguments', nargs='*')
         parser_cdp.add_argument('-html', '--html', default=False, action='store_true',
                                 help='If not using Jupyter Notebook, output interactive plot to browser as save to .html')
         parser_cdp.add_argument('-pub', '--publish', action='store_true',

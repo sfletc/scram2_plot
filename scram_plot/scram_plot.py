@@ -62,7 +62,7 @@ def main(argv=None):
                                  'to smoothing. X-axis shows bin, not reference position')
 
         #Compare plot
-        parser_cdp = subparsers.add_parser("compare", help = "Generates a scatter plot for a SCRAM cpd alignment")
+        parser_cdp = subparsers.add_parser("compare", help = "Generates a scatter plot for a SCRAM compare alignment")
         parser_cdp.add_argument('-plot_type', '--plot_type', default="log_error",
                                     help='Bokeh plot type to display (log, log_error or all)')
         parser_cdp.add_argument('-a', '--alignment',

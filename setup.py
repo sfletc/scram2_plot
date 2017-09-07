@@ -1,12 +1,12 @@
 from setuptools import setup
 
-setup(name='scram2_plot',
+setup(name='scram_plot',
       version='0.1.1',
-      description='scram2_plot',
+      description='scram_plot',
       author='Stephen Fletcher',
       author_email='s.fletcher@uq.edu.au',
       license='MIT',
-      packages=['scram2_plot'],
+      packages=['scram_plot'],
       classifiers=[
     # How mature is this project? Common values are
     #   3 - Alpha
@@ -25,8 +25,8 @@ setup(name='scram2_plot',
     # that you indicate whether you support Python 2, Python 3 or both.
     'Programming Language :: Python :: 3.5'],
       install_requires=['numpy','matplotlib','bokeh'],
-      scripts=['scram2_plot/scram2_plot.py',
-      'scram2_plot/profile_plot.py',
-      'scram2_plot/compare_plot.py'
+      scripts=['scram_plot/scram_plot.py',
+      'scram_plot/profile_plot.py',
+      'scram_plot/compare_plot.py'
       ],
       zip_safe=False)

@@ -24,7 +24,7 @@ def main(argv=None):
 
         subparsers = parser.add_subparsers(help="Select profile or scatter plot", dest="command")
         parser_profile = subparsers.add_parser("profile",
-                                               help="Generates alignment profile/s for 1 or more reference sequences")
+                                               help="Generates profile plot/s from a SCRAM profile alignment")
 
         #profile plot
         parser_profile.add_argument('-a', '--alignment',

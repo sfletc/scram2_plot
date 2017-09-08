@@ -136,10 +136,10 @@ def plot_compare_plot(file_path, header, log_max, nt, seq1, seq2, x_vals_line, x
     p.yaxis.axis_label = seq2
     show(p)
     if save_plot:
-        profile_to_file(fig_size, file_path, log_max, nt, pub_plot, seq1, seq2, x_vals_point, xerr, y_vals_point, yerr)
+        compare_plot_to_file(fig_size, file_path, log_max, nt, pub_plot, seq1, seq2, x_vals_point, xerr, y_vals_point, yerr)
 
 
-def profile_to_file(fig_size, file_path, log_max, nt, pub_plot, seq1, seq2, x_vals_point, xerr, y_vals_point, yerr):
+def compare_plot_to_file(fig_size, file_path, log_max, nt, pub_plot, seq1, seq2, x_vals_point, xerr, y_vals_point, yerr):
     fig = plt.figure(figsize=(fig_size, fig_size))
     if xerr != []:
         plt.errorbar(x_vals_point, y_vals_point, xerr=xerr, yerr=yerr, capsize=0, ls='none', color=pp._nt_colour(

@@ -146,7 +146,10 @@ def compare_plot_to_file(fig_size, file_path, log_max, nt, pub_plot, seq1, seq2,
             nt),
                      elinewidth=0.5)
     plt.plot([0.1, log_max], [0.1, log_max], alpha=0.9, linewidth=1)
-    plt.scatter(x_vals_point, y_vals_point, color=pp._nt_colour(nt), s=3, label="{0} nt".format(nt))
+    if nt == "mir":
+        plt.scatter(x_vals_point, y_vals_point, color=pp._nt_colour(nt), s=3, label="microRNA".format(nt))
+    else:
+        plt.scatter(x_vals_point, y_vals_point, color=pp._nt_colour(nt), s=3, label="{0} nt".format(nt))
     plt.xlim([0.1, log_max])
     plt.ylim([0.1, log_max])
     plt.xscale('log')

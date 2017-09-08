@@ -124,8 +124,7 @@ def plot_compare_plot(file_path, header, log_max, nt, seq1, seq2, x_vals_line, x
                                     )
     if nt == "mir":
         p.circle('x', 'y', name="circle", source=source_point, size=3, color=pp._nt_colour(nt),
-                 legend="microRNA".format(
-            nt))
+                 legend="microRNA")
     else:
         p.circle('x', 'y', name="circle", source=source_point, size=3, color=pp._nt_colour(nt), legend="{0} nt".format(
         nt))
@@ -137,27 +136,27 @@ def plot_compare_plot(file_path, header, log_max, nt, seq1, seq2, x_vals_line, x
     p.yaxis.axis_label = seq2
     show(p)
     if save_plot:
+        profile_to_file(fig_size, file_path, log_max, nt, pub_plot, seq1, seq2, x_vals_point, xerr, y_vals_point, yerr)
 
-        fig = plt.figure(figsize=(fig_size, fig_size))
-        if xerr != []:
-            plt.errorbar(x_vals_point, y_vals_point, xerr=xerr, yerr=yerr, capsize=0, ls='none', color=pp._nt_colour(
-                nt),
-                         elinewidth=0.5)
 
-        plt.plot([0.1, log_max], [0.1, log_max], alpha=0.9, linewidth=1)
-        plt.scatter(x_vals_point, y_vals_point, color=pp._nt_colour(nt), s=3, label="{0} nt".format(nt))
-        plt.xlim([0.1, log_max])
-        plt.ylim([0.1, log_max])
-        plt.xscale('log')
-        plt.yscale('log')
-        if pub_plot:
-            pp._pub_plot()
-            plt.minorticks_off()
-        else:
-            plt.grid(linestyle='-', alpha=0.2)
-            plt.xlabel(seq1)
-            plt.ylabel(seq2)
-            plt.legend()
-
-        plt.savefig(file_path + '/{0}_{1}_{2}.png'.format(seq1, seq2, nt), dpi=300)
-        # plt.show()
+def profile_to_file(fig_size, file_path, log_max, nt, pub_plot, seq1, seq2, x_vals_point, xerr, y_vals_point, yerr):
+    fig = plt.figure(figsize=(fig_size, fig_size))
+    if xerr != []:
+        plt.errorbar(x_vals_point, y_vals_point, xerr=xerr, yerr=yerr, capsize=0, ls='none', color=pp._nt_colour(
+            nt),
+                     elinewidth=0.5)
+    plt.plot([0.1, log_max], [0.1, log_max], alpha=0.9, linewidth=1)
+    plt.scatter(x_vals_point, y_vals_point, color=pp._nt_colour(nt), s=3, label="{0} nt".format(nt))
+    plt.xlim([0.1, log_max])
+    plt.ylim([0.1, log_max])
+    plt.xscale('log')
+    plt.yscale('log')
+    if pub_plot:
+        pp._pub_plot()
+        plt.minorticks_off()
+    else:
+        plt.grid(linestyle='-', alpha=0.2)
+        plt.xlabel(seq1)
+        plt.ylabel(seq2)
+        plt.legend()
+    plt.savefig(file_path + '/{0}_{1}_{2}.png'.format(seq1, seq2, nt), dpi=300)

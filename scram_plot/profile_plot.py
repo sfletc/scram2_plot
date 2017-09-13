@@ -97,7 +97,7 @@ def load_indv_files(in_files, nt_list):
     :param nt_list:
     :return:
     """
-    print("\nLoading scram2 alignment files:\n")
+    print("\nLoading scram alignment files:\n")
 
     alignment_file_list = []
     for nt in nt_list:
@@ -105,7 +105,7 @@ def load_indv_files(in_files, nt_list):
         if os.path.isfile(fname):
             try:
                 print("{0} \n".format(fname))
-                in_file, _ = import_scram2_profile(fname)
+                in_file, _ = import_scram_profile(fname)
                 alignment_file_list.append(in_file)
             except:
                 print("\nCannot load and process {}".format(fname))
@@ -117,9 +117,9 @@ def load_indv_files(in_files, nt_list):
     return alignment_file_list
 
 
-def import_scram2_profile(in_file):
+def import_scram_profile(in_file):
     """
-    Import a SCRAM2 csv file to a dictionary
+    Import a SCRAM csv file to a dictionary
     :param in_file: path/to/profile string
     :return: alignments dictionary and srna length in the alignment
     """

@@ -10,13 +10,26 @@ import math
 import os.path
 
 def compare_plot(file_prefix, nt_list, seq1, seq2, plot_type, browser, save_plot, pub, fig_size, xylim):
+    """
+    Compare plot
+    :param file_prefix: path/to/file prefix
+    :param nt_list: read length list to plot
+    :param seq1: x seq name
+    :param seq2: y seq name
+    :param plot_type: plot type
+    :param browser: output to html
+    :param save_plot: bool to save plot
+    :param pub: bool to remove axes and legend
+    :param fig_size: figure dimensions
+    :param xylim: x/y axi limit
+    """
     #try:
     if nt_list[0]=="mir":
         fname = file_prefix + "_miR.csv"
         if os.path.isfile(fname):
             try:
-                format_compare_data(fname, "mir", browser, plot_type, pub, save_plot,
-                                    seq1, seq2, fig_size, xylim)
+                _format_compare_data(fname, "mir", browser, plot_type, pub, save_plot,
+                                     seq1, seq2, fig_size, xylim)
             except:
                 print("\nCannot load and process {}".format(fname))
                 sys.exit()
@@ -28,18 +41,18 @@ def compare_plot(file_prefix, nt_list, seq1, seq2, plot_type, browser, save_plot
         for nt in nt_list:
             fname = "{0}_{1}.csv".format(file_prefix, nt)
             if os.path.isfile(fname):
-                # try:
-                format_compare_data(fname, int(nt), browser, plot_type, pub, save_plot,
-                                seq1, seq2, fig_size, xylim)
-                # except:
-                #     print("\nCannot load and process {}".format(fname))
-                #     sys.exit()
+                try:
+                    _format_compare_data(fname, int(nt), browser, plot_type, pub, save_plot,
+                                         seq1, seq2, fig_size, xylim)
+                except:
+                    print("\nCannot load and process {}".format(fname))
+                    sys.exit()
             else:
                 print("\n{} does not exist at this location".format(fname))
                 sys.exit()
 
 
-def format_compare_data(file_name, nt, browser, plot_type, pub, save_plot, seq1, seq2, fig_size, xylim):
+def _format_compare_data(file_name, nt, browser, plot_type, pub, save_plot, seq1, seq2, fig_size, xylim):
     if "/" in file_name:
         file_path = file_name.rsplit('/', 1)[0]
     else:
@@ -59,6 +72,31 @@ def format_compare_data(file_name, nt, browser, plot_type, pub, save_plot, seq1,
     header = []
     yerr = []
     max_y = 0.0
+    log_max, max_x = _extract_alignment_data(file_name, first_line, header, max_x, max_y, x_vals_line, x_vals_point,
+                                             xerr, xylim, y_vals_line, y_vals_point, yerr)
+    # Interactive
+    #Hack as bokeh tooltip text wrapping for large x values not working properly
+    for plot_point in range(len(header)):
+        if math.log10(x_vals_point[plot_point]+0.0001)> 0.35*math.log10(max_x):
+            header[plot_point]=header[plot_point][:40]
+
+    _plot_type(fig_size, file_path, header, log_max, nt, plot_type, pub, save_plot, seq1, seq2, x_vals_line,
+               x_vals_point, xerr, y_vals_line, y_vals_point, yerr)
+
+
+def _plot_type(fig_size, file_path, header, log_max, nt, plot_type, pub, save_plot, seq1, seq2, x_vals_line,
+               x_vals_point, xerr, y_vals_line, y_vals_point, yerr):
+    if plot_type == "log" or plot_type == "all":
+        _plot_compare_plot(file_path, header, log_max, nt, seq1, seq2, [], x_vals_point, [], y_vals_point, [], [],
+                           save_plot,
+                           pub, fig_size)
+    if plot_type == "log_error" or plot_type == "all":
+        _plot_compare_plot(file_path, header, log_max, nt, seq1, seq2, x_vals_line, x_vals_point, y_vals_line,
+                           y_vals_point, xerr, yerr, save_plot, pub, fig_size)
+
+
+def _extract_alignment_data(file_name, first_line, header, max_x, max_y, x_vals_line, x_vals_point, xerr, xylim,
+                            y_vals_line, y_vals_point, yerr):
     with open(file_name) as csvfile:
         line_reader = csv.reader(csvfile)
         for line in line_reader:
@@ -85,28 +123,17 @@ def format_compare_data(file_name, nt, browser, plot_type, pub, save_plot, seq1,
                 y_vals_point.append(float(line[-2]))
 
                 header.append(line[0])
-    if xylim =="auto":
+    if xylim == "auto":
         _max = max([max_x, max_y])  # sets up max x and y scale values
         log_max = _max + _max / 2
     else:
-        log_max=int(xylim)
+        log_max = int(xylim)
     csvfile.close()
-    # Interactive
-    #Hack as bokeh tooltip text wrapping for large x values not working properly
-    for plot_point in range(len(header)):
-        if math.log10(x_vals_point[plot_point]+0.0001)> 0.35*math.log10(max_x):
-            header[plot_point]=header[plot_point][:40]
-
-    if plot_type == "log" or plot_type == "all":
-        plot_compare_plot(file_path, header, log_max, nt, seq1, seq2, [], x_vals_point, [], y_vals_point, [], [], save_plot,
-                          pub, fig_size)
-    if plot_type == "log_error" or plot_type == "all":
-        plot_compare_plot(file_path, header, log_max, nt, seq1, seq2, x_vals_line, x_vals_point, y_vals_line,
-                          y_vals_point, xerr, yerr, save_plot, pub, fig_size)
+    return log_max, max_x
 
 
-def plot_compare_plot(file_path, header, log_max, nt, seq1, seq2, x_vals_line, x_vals_point, y_vals_line, y_vals_point,
-                      xerr, yerr, save_plot, pub_plot, fig_size = 4):
+def _plot_compare_plot(file_path, header, log_max, nt, seq1, seq2, x_vals_line, x_vals_point, y_vals_line, y_vals_point,
+                       xerr, yerr, save_plot, pub_plot, fig_size = 4):
     # Std Error bars
     hover = HoverTool(
         tooltips=[
@@ -136,10 +163,10 @@ def plot_compare_plot(file_path, header, log_max, nt, seq1, seq2, x_vals_line, x
     p.yaxis.axis_label = seq2
     show(p)
     if save_plot:
-        compare_plot_to_file(fig_size, file_path, log_max, nt, pub_plot, seq1, seq2, x_vals_point, xerr, y_vals_point, yerr)
+        _compare_plot_to_file(fig_size, file_path, log_max, nt, pub_plot, seq1, seq2, x_vals_point, xerr, y_vals_point, yerr)
 
 
-def compare_plot_to_file(fig_size, file_path, log_max, nt, pub_plot, seq1, seq2, x_vals_point, xerr, y_vals_point, yerr):
+def _compare_plot_to_file(fig_size, file_path, log_max, nt, pub_plot, seq1, seq2, x_vals_point, xerr, y_vals_point, yerr):
     fig = plt.figure(figsize=(fig_size, fig_size))
     if xerr != []:
         plt.errorbar(x_vals_point, y_vals_point, xerr=xerr, yerr=yerr, capsize=0, ls='none', color=pp._nt_colour(

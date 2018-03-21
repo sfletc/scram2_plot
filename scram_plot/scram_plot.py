@@ -9,9 +9,9 @@ from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 
 __all__ = []
-__version__ = 0.67
+__version__ = 0.68
 __date__ = '2017-05-30'
-__updated__ = '2017-05-30'
+__updated__ = '2018-03-21'
 
 
 def main(argv=None):

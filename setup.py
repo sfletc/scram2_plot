@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='scram_plot',
-      version='0.1.1',
+      version='0.68.0',
       description='scram_plot',
       author='Stephen Fletcher',
       author_email='s.fletcher@uq.edu.au',

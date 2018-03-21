@@ -227,7 +227,10 @@ def _select_win_size(max_ref_len, select_win, win):
     if win == 0 or select_win:
         win = int(max_ref_len / 30)
         select_win = True
-    if win % 2 != 0 or win == 0: win += 1
+    if win % 2 != 0:
+        win += 1
+    if win < 6:
+        win = 1
     return win, select_win
 
 
@@ -367,7 +370,10 @@ def _plot_profile_plot(nt_list, x_ref, smoothed_for_plot_tuple, header, plot_y_l
         _pub_plot()
     else:
         xlabel(header)
-        ylabel('Coverage (smoothed RPMR; win = {})'.format(win))
+        if win != 1:
+            ylabel('Coverage (smoothed RPMR; win = {})'.format(win))
+        else:
+            ylabel('Coverage (RPMR)')
         plt.legend(loc='best', fancybox=True, framealpha=0.5)
     if plot_y_lim != 0:
         ylim(-plot_y_lim, plot_y_lim)
